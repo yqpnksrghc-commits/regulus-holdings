@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * ============================================================
+ * Regulus Automation Inc. — Design Tokens
+ * Single source of truth for color. Light is the default;
+ * `.dark` on <html> flips the palette. Values are space-
+ * separated RGB channels so Tailwind's alpha bridge works.
+ * ============================================================
+ */
+:root {
+  /* Surfaces — soft white / steel */
+  --bg: 251 250 247; /* #fbfaf7 soft white */
+  --bg-2: 243 241 234; /* #f3f1ea */
+  --panel: 255 255 255; /* #ffffff */
+  --panel-2: 247 245 239; /* #f7f5ef */
+
+  /* Ink — deep charcoal / steel gray */
+  --ink: 21 23 27; /* #15171b */
+  --ink-soft: 65 69 77; /* #41454d */
+  --dim: 107 114 128; /* #6b7280 steel gray */
+  --line: 230 225 213; /* #e6e1d5 */
+  --line-2: 216 210 196; /* #d8d2c4 */
+
+  /* Accents */
+  --accent: 47 86 200; /* #2f56c8 electric blue */
+  --accent-soft: 91 128 239; /* #5b80ef */
+  --emerald: 15 122 91; /* #0f7a5b */
+  --gold: 154 116 36; /* #9a7424 warm gold — used sparingly */
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+
+  color-scheme: light;
+}
+
+.dark {
+  --bg: 11 12 15; /* #0b0c0f deep charcoal */
+  --bg-2: 16 18 22; /* #101216 */
+  --panel: 20 22 27; /* #14161b */
+  --panel-2: 24 27 33; /* #181b21 */
+
+  --ink: 236 238 243; /* #eceef3 */
+  --ink-soft: 182 187 198; /* #b6bbc6 */
+  --dim: 131 137 150; /* #838996 */
+  --line: 35 38 46; /* #23262e */
+  --line-2: 44 48 56; /* #2c3038 */
+
+  --accent: 124 155 255; /* #7c9bff */
+  --accent-soft: 155 178 255; /* #9bb2ff */
+  --emerald: 52 190 148; /* #34be94 */
+  --gold: 211 164 78; /* #d3a44e */
+
+  color-scheme: dark;
+}
+
+/* ============================================================ Base ============================================================ */
+@layer base {
+  * {
+    @apply border-line;
+  }
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+  }
+  ::selection {
+    background: rgb(var(--accent) / 0.18);
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-bg rounded-sm;
+  }
+  h1, h2, h3, h4 {
+    @apply text-ink font-semibold tracking-tight;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Respect reduced-motion for every animation and transition. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ============================================================ Components ============================================================ */
+@layer components {
+  .container-lab {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-6 lg:px-8;
+  }
+  .container-narrow {
+    @apply mx-auto w-full max-w-3xl px-5 sm:px-6;
+  }
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-dim;
+  }
+  .link-underline {
+    @apply relative text-ink-soft transition-colors hover:text-ink;
+  }
+  /* Hairline grid background for hero / feature sections */
+  .grid-lines {
+    background-image:
+      linear-gradient(to right, rgb(var(--line) / 0.6) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(var(--line) / 0.6) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 40%, transparent 100%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 40%, transparent 100%);
+  }
+}
+
+/* Utility: thin scrollbar for content panes */
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(120deg, rgb(var(--ink)) 20%, rgb(var(--accent)) 120%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
