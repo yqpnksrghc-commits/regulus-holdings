@@ -10,6 +10,11 @@ This is not a marketing site. It is the front door of a company intended to
 endure for generations. Every design decision favors restraint, clarity, and
 honesty over hype.
 
+> **Governance:** this project is one capability of Regulus Automation Inc.,
+> governed by the [Regulus Constitution](../Regulus/Constitution/README.md) and
+> recorded in the [Capability Registry](../Regulus/CapabilityRegistry/capabilities/website.md).
+> Brand, evidence classes, and release process are defined there.
+
 > **Naming:** *Regulus Automation Inc.* is the registered legal entity and the
 > public-facing company name; **Regulus** is the short display brand. The
 > broader vision — the ten intelligence domains, the research programme, and the

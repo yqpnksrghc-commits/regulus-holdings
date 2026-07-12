@@ -3,6 +3,11 @@
 _Single source of truth for the canonical web presence. Update on any change to
 name, domain, canonical repo, or deployment state._
 
+> **Governed by the [Regulus Constitution](../Regulus/Constitution/README.md)**
+> and indexed in the [Capability Registry](../Regulus/CapabilityRegistry/capabilities/website.md).
+> Company-wide facts (brand, evidence classes, release process) are defined
+> there; this file records website-specific status only and does not redefine them.
+
 | Field | Value |
 | --- | --- |
 | **Legal company name** | Regulus Automation Inc. |
