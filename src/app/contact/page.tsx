@@ -31,18 +31,20 @@ export default function ContactPage() {
                 {site.email}
               </a>
             </div>
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-dim">Elsewhere</h2>
-              <ul className="mt-2 flex flex-col gap-2">
-                {site.social.map((s) => (
-                  <li key={s.href}>
-                    <a href={s.href} target="_blank" rel="noopener noreferrer" className="link-underline text-ink">
-                      {s.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {site.social.length > 0 && (
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-dim">Elsewhere</h2>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {site.social.map((s) => (
+                    <li key={s.href}>
+                      <a href={s.href} target="_blank" rel="noopener noreferrer" className="link-underline text-ink">
+                        {s.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="rounded-2xl border border-line bg-bg-2/60 p-5">
               <p className="text-sm text-ink-soft">
                 We read every message and reply to the ones where we can genuinely help. Evidence

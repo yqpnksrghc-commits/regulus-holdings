@@ -19,8 +19,14 @@ export default function TermsPage() {
       />
       <Section>
         <div className="mx-auto max-w-prose">
-          <div className="mb-10 rounded-xl border border-line bg-bg-2/60 p-4 text-sm text-dim">
-            These terms are a working draft pending review by counsel.
+          <div className="mb-10 flex items-start gap-3 rounded-xl border border-gold/40 bg-gold/10 p-4 text-sm text-ink-soft">
+            <span className="mt-0.5 rounded-full border border-gold/50 px-2 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-gold">
+              Draft
+            </span>
+            <p>
+              <strong className="text-ink">These Terms of Use are a working draft pending legal review.</strong>{" "}
+              They are not yet legally approved and may change.
+            </p>
           </div>
 
           <div className="flex flex-col gap-8 text-ink-soft">

@@ -42,20 +42,22 @@ export function Footer() {
           <p className="text-sm text-dim">
             © {year} {site.name} Recovering value; building intelligence.
           </p>
-          <ul className="flex items-center gap-5">
-            {site.social.map((s) => (
-              <li key={s.href}>
-                <a
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-ink-soft transition-colors hover:text-ink"
-                >
-                  {s.label}
-                </a>
-              </li>
-            ))}
-          </ul>
+          {site.social.length > 0 && (
+            <ul className="flex items-center gap-5">
+              {site.social.map((s) => (
+                <li key={s.href}>
+                  <a
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-ink-soft transition-colors hover:text-ink"
+                  >
+                    {s.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </footer>

@@ -19,9 +19,15 @@ export default function PrivacyPage() {
       />
       <Section>
         <div className="mx-auto max-w-prose">
-          <div className="mb-10 rounded-xl border border-line bg-bg-2/60 p-4 text-sm text-dim">
-            This policy is a working draft pending review by counsel. It reflects the current,
-            deliberately minimal data practices of this website.
+          <div className="mb-10 flex items-start gap-3 rounded-xl border border-gold/40 bg-gold/10 p-4 text-sm text-ink-soft">
+            <span className="mt-0.5 rounded-full border border-gold/50 px-2 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-gold">
+              Draft
+            </span>
+            <p>
+              <strong className="text-ink">This Privacy Policy is a working draft pending legal review.</strong>{" "}
+              It is not yet legally approved and may change. It reflects the current, deliberately
+              minimal data practices of this website.
+            </p>
           </div>
 
           <div className="prose-legal flex flex-col gap-8 text-ink-soft">

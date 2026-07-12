@@ -32,3 +32,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Re-include project files that a parent (LAB) .gitignore excludes by broad
+# pattern (.env.*, *.png, package-lock.json). These are required, committed
+# artifacts for this deployable web project — and contain no secrets.
+!.env.example
+!package-lock.json
+!public/*.png
+!src/app/*.png
+!src/app/**/*.png

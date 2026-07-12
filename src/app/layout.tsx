@@ -33,8 +33,9 @@ export const metadata: Metadata = {
     description: site.description,
     url: site.url,
     locale: site.locale,
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: `${site.name} — ${site.tagline}` }],
   },
-  twitter: { card: "summary_large_image" },
+  twitter: { card: "summary_large_image", images: ["/og.png"] },
   robots: { index: true, follow: true },
 };
 
@@ -50,6 +51,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Without JS, Framer Motion's SSR'd `opacity:0` would hide content.
+            Force everything visible and static so the site is fully readable. */}
+        <noscript>
+          <style>{`*{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
+      </head>
       <body className="min-h-dvh">
         {/* next-themes reads/writes the `class` on <html> before paint. */}
         <ThemeProvider>

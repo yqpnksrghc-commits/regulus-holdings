@@ -16,13 +16,11 @@ export const site = {
   mission: "Identify avoidable loss, quantify it, and recover persistent value.",
   url: "https://regulusautomation.ca",
   locale: "en_CA",
-  email: "contact@regulusautomation.ca",
+  email: "info@regulusautomation.ca",
   founded: 2024,
-  social: [
-    { label: "LinkedIn", href: "https://www.linkedin.com/company/regulus-automation" },
-    { label: "X", href: "https://x.com/regulusauto" },
-    { label: "GitHub", href: "https://github.com/regulus-automation" },
-  ],
+  // Social links are intentionally empty: display only verified, explicitly
+  // supplied URLs. Do NOT add placeholder/inferred handles.
+  social: [] as { label: string; href: string }[],
 } as const;
 
 export type NavItem = { label: string; href: string; description?: string };

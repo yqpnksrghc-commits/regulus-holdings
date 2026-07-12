@@ -16,6 +16,7 @@ export function buildMetadata(input: {
   // Open Graph / Twitter need the fully-composed title (no template applies).
   const fullTitle = input.title === site.name ? site.name : `${input.title} — ${site.name}`;
 
+  const ogImage = { url: "/og.png", width: 1200, height: 630, alt: `${site.name} — ${site.tagline}` };
   return {
     title: input.title,
     description,
@@ -27,11 +28,13 @@ export function buildMetadata(input: {
       description,
       url,
       locale: site.locale,
+      images: [ogImage],
     },
     twitter: {
       card: "summary_large_image",
       title: fullTitle,
       description,
+      images: ["/og.png"],
     },
   };
 }
@@ -49,6 +52,7 @@ export function organizationJsonLd() {
     description: site.description,
     foundingDate: String(site.founded),
     email: site.email,
-    sameAs: site.social.map((s) => s.href),
+    // Only advertise verified profiles; omit `sameAs` entirely when none exist.
+    ...(site.social.length > 0 ? { sameAs: site.social.map((s) => s.href) } : {}),
   };
 }
