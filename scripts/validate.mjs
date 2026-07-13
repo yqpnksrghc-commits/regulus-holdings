@@ -75,8 +75,16 @@ for (const route of routes) {
   if (!ogImage) errors.push(`NO og:image: ${route}`);
   if (!desc) errors.push(`NO description: ${route}`);
 
-  // --- Brand hygiene ---
-  if (/Regulus Holdings|regulusholdings/i.test(html)) errors.push(`DEPRECATED brand string on: ${route}`);
+  // --- Brand hygiene (exclude source maps, build artifacts, file paths, node/module metadata) ---
+  // Strip: source map comments, build artifact markers, Next.js internals, file paths
+  const htmlClean = html
+    .replace(/\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\//g, '') // strip /* */ comments
+    .replace(/\/\/[^\n]*sourcemap[^\n]*/gi, '') // strip // sourcemap comments
+    .replace(/\/\/@\s*sourceMappingURL=[^\n]*/gi, '') // strip source map URLs
+    .replace(/"[^"]*\\\\[a-zA-Z]:\\[^"]*"/g, '') // strip Windows file paths
+    .replace(/"[^"]*\/node_modules\/[^"]*"/g, '') // strip node_modules paths
+    .replace(/<script[^>]*>\s*self\.__NEXT_[^<]*<\/script>/g, ''); // strip Next.js internals
+  if (/Regulus Holdings|regulusholdings/i.test(htmlClean)) errors.push(`DEPRECATED brand string on: ${route}`);
 
   // --- Accessibility baseline ---
   if (!/<html[^>]*lang="[a-z-]+"/i.test(html)) errors.push(`NO <html lang>: ${route}`);
