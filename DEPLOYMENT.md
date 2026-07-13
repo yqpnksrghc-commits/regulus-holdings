@@ -125,6 +125,42 @@ repository secrets.
 
 ---
 
+## Local development
+
+Run the site locally for testing and development:
+
+### Development server (with hot reload)
+```bash
+npm run dev
+```
+Runs on `http://localhost:3000` (Next.js default port).
+
+To use a custom port:
+```bash
+PORT=8780 npm run dev
+```
+
+### Production build + server
+```bash
+npm run build
+npm run start
+```
+Runs on `http://localhost:3000` (same port as dev by default).
+
+To use a custom port:
+```bash
+PORT=8780 npm run start
+```
+
+**Note:** The `.claude/launch.json` config at the parent LAB level specifies
+port 8780 for the `regulus-automation` entry, but the `--port` argument in that
+config is not a valid Next.js dev flag. To use port 8780 locally, set `PORT`
+environment variable as shown above, or edit `.claude/launch.json` to use
+`PORT=8780 npm run dev` instead. The production server defaults to port 3000
+and respects the `PORT` environment variable.
+
+---
+
 ## Pre-flight checklist
 
 - [ ] `site.url` set to the production origin.
