@@ -39,9 +39,11 @@ const config: Config = {
         "accent-soft": "rgb(var(--accent-soft) / <alpha-value>)",
         emerald: "rgb(var(--emerald) / <alpha-value>)",
         gold: "rgb(var(--gold) / <alpha-value>)",
+        amber: "rgb(var(--amber) / <alpha-value>)",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        serif: ["var(--font-serif)", "Georgia", "serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       fontSize: {

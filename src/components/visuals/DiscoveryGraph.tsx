@@ -38,13 +38,13 @@ export function DiscoveryGraph() {
           key={i}
           d={edge(a, b)}
           fill="none"
-          stroke="rgb(var(--accent))"
+          stroke="rgb(var(--gold))"
           strokeWidth={1}
-          strokeOpacity={0.35}
+          strokeOpacity={0.32}
           initial={reduce ? undefined : { pathLength: 0, opacity: 0 }}
-          whileInView={reduce ? undefined : { pathLength: 1, opacity: 0.35 }}
+          whileInView={reduce ? undefined : { pathLength: 1, opacity: 0.32 }}
           viewport={{ once: true }}
-          transition={{ duration: 1.1, delay: (i % 6) * 0.12, ease: "easeInOut" }}
+          transition={{ duration: 1.6, delay: (i % 6) * 0.16, ease: "easeInOut" }}
         />
       ))}
 
@@ -60,7 +60,7 @@ export function DiscoveryGraph() {
         />
       ))}
       {clusters.map((cl, i) => (
-        <circle key={`c${i}`} cx={cl.x} cy={cl.y} r={7} fill="rgb(var(--panel))" stroke="rgb(var(--accent))" strokeWidth={1.5} />
+        <circle key={`c${i}`} cx={cl.x} cy={cl.y} r={7} fill="rgb(var(--panel))" stroke="rgb(var(--gold))" strokeWidth={1.5} />
       ))}
 
       <motion.circle

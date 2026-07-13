@@ -1,4 +1,5 @@
 import { Hero } from "@/components/sections/Hero";
+import { Ethos } from "@/components/sections/Ethos";
 import { Problem } from "@/components/sections/Problem";
 import { Approach } from "@/components/sections/Approach";
 import { PlatformGrid } from "@/components/sections/PlatformGrid";
@@ -13,6 +14,7 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <Ethos />
       <Problem />
       <Approach />
       <PlatformGrid />

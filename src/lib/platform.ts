@@ -207,3 +207,40 @@ export const evidenceMeta: Record<EvidenceClass, { label: string; blurb: string;
 export function getDomain(slug: string) {
   return intelligenceDomains.find((d) => d.slug === slug);
 }
+
+/**
+ * How the domains connect — grounded relationships, not decoration. Hovering
+ * one domain illuminates these (the "constellation"). Discovery feeds every
+ * domain, so it connects to all. Relationships are made symmetric at runtime
+ * by `relatedSlugs`.
+ */
+export const domainRelations: Record<string, string[]> = {
+  "corporate-intelligence": ["financial-intelligence", "knowledge-intelligence", "decision-intelligence"],
+  "financial-intelligence": ["corporate-intelligence", "decision-intelligence"],
+  "knowledge-intelligence": ["corporate-intelligence", "decision-intelligence", "psychological-intelligence"],
+  "psychological-intelligence": ["knowledge-intelligence", "decision-intelligence"],
+  "decision-intelligence": [
+    "corporate-intelligence",
+    "financial-intelligence",
+    "knowledge-intelligence",
+    "psychological-intelligence",
+  ],
+  "automation-intelligence": ["infrastructure-intelligence", "corporate-intelligence"],
+  "infrastructure-intelligence": ["automation-intelligence", "energy-intelligence", "material-intelligence"],
+  "energy-intelligence": ["infrastructure-intelligence", "material-intelligence"],
+  "material-intelligence": ["infrastructure-intelligence", "energy-intelligence"],
+  // The Discovery Engine feeds every other domain.
+  "discovery-intelligence": intelligenceDomains
+    .map((d) => d.slug)
+    .filter((s) => s !== "discovery-intelligence"),
+};
+
+/** The symmetric set of domains related to `slug` (excludes `slug` itself). */
+export function relatedSlugs(slug: string): Set<string> {
+  const set = new Set<string>(domainRelations[slug] ?? []);
+  for (const [key, list] of Object.entries(domainRelations)) {
+    if (list.includes(slug)) set.add(key);
+  }
+  set.delete(slug);
+  return set;
+}

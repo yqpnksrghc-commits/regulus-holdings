@@ -9,7 +9,7 @@ const line = {
   show: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.08 * i },
+    transition: { duration: 1.0, ease: [0.22, 1, 0.36, 1], delay: 0.12 * i },
   }),
 };
 
@@ -20,19 +20,21 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden">
-      {/* Background layers */}
+      {/* Background layers — the night sky, warm light emerging. */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 grid-lines opacity-60" />
-        <div className="absolute inset-0 opacity-[0.7]">
+        <div className="absolute inset-0 grid-lines opacity-40" />
+        <div className="absolute inset-0 opacity-90">
           <NetworkBackground className="h-full w-full" />
         </div>
+        {/* A quiet warm aura where the headline sits — knowledge emerging. */}
+        <div className="absolute left-[-10%] top-[42%] h-[42rem] w-[42rem] -translate-y-1/2 rounded-full aura-gold" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-bg" />
       </div>
 
       <div className="container-lab relative py-28 sm:py-36 lg:py-44">
         <div className="max-w-3xl">
           <motion.p {...anim(0)} className="eyebrow mb-6">
-            <span aria-hidden className="h-px w-6 bg-accent" />
+            <span aria-hidden className="tick" />
             Regulus Automation Inc.
           </motion.p>
 
@@ -71,6 +73,12 @@ export function Hero() {
               </div>
             ))}
           </motion.dl>
+
+          <motion.p {...anim(6)} className="mt-8 flex items-center gap-2.5 font-serif text-sm italic text-dim">
+            <span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-gold" />
+            Regulus — the brightest star in Leo, the heart of the lion. We take the
+            name as a standard: clean light, no distortion.
+          </motion.p>
         </div>
       </div>
     </section>

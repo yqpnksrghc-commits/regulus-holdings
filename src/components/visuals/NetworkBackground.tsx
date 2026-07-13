@@ -3,10 +3,11 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Subtle drifting node-and-edge field rendered on canvas. Deliberately quiet:
- * low node count, thin lines, slow motion. It pauses when scrolled out of view
- * (IntersectionObserver) and renders a single static frame under reduced
- * motion, so it never costs battery on an idle tab.
+ * A quiet gold constellation rendered on canvas. Deliberately calm: low star
+ * count, barely-there drift, slow twinkle, thin connective lines that fade with
+ * distance — order that reveals itself rather than particles that demand
+ * attention. Pauses when scrolled out of view (IntersectionObserver) and renders
+ * a single static frame under reduced motion, so it never costs battery idle.
  */
 export function NetworkBackground({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -23,22 +24,23 @@ export function NetworkBackground({ className }: { className?: string }) {
     let dpr = Math.min(window.devicePixelRatio || 1, 2);
     let raf = 0;
     let visible = true;
+    let t = 0; // frame counter drives the slow twinkle (no Date needed)
 
-    type Node = { x: number; y: number; vx: number; vy: number };
+    type Node = { x: number; y: number; vx: number; vy: number; r: number; phase: number; tw: number };
     let nodes: Node[] = [];
 
     const color = () => {
-      // Read the resolved ink color so the field matches the active theme.
+      // Read the resolved gold so the constellation matches the active theme.
       const styles = getComputedStyle(document.documentElement);
-      const ink = styles.getPropertyValue("--accent").trim() || "47 86 200";
-      return ink.replace(/\s+/g, ",");
+      const gold = styles.getPropertyValue("--gold").trim() || "224 178 96";
+      return gold.replace(/\s+/g, ",");
     };
     let rgb = color();
 
     const density = () => {
       const area = width * height;
-      // ~1 node per 22k px², capped for performance on large screens.
-      return Math.max(18, Math.min(64, Math.round(area / 22000)));
+      // Sparser than a network — a night sky, ~1 star per 30k px², capped low.
+      return Math.max(14, Math.min(42, Math.round(area / 30000)));
     };
 
     function seed() {
@@ -46,8 +48,13 @@ export function NetworkBackground({ className }: { className?: string }) {
       nodes = Array.from({ length: count }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.18,
-        vy: (Math.random() - 0.5) * 0.18,
+        // Barely-there drift — the sky turns slowly.
+        vx: (Math.random() - 0.5) * 0.06,
+        vy: (Math.random() - 0.5) * 0.06,
+        // A few brighter stars among many faint ones.
+        r: Math.random() < 0.22 ? 2.1 : 1.3,
+        phase: Math.random() * Math.PI * 2,
+        tw: 0.004 + Math.random() * 0.006, // twinkle speed
       }));
     }
 
@@ -63,20 +70,18 @@ export function NetworkBackground({ className }: { className?: string }) {
       seed();
     }
 
-    const LINK = 132;
+    const LINK = 150;
 
     function draw() {
       ctx!.clearRect(0, 0, width, height);
-      // Edges
+      // Connective lines — faint, gold, fading with distance (relationships).
       for (let i = 0; i < nodes.length; i++) {
         const a = nodes[i];
         for (let j = i + 1; j < nodes.length; j++) {
           const b = nodes[j];
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const dist = Math.hypot(dx, dy);
+          const dist = Math.hypot(a.x - b.x, a.y - b.y);
           if (dist < LINK) {
-            const alpha = (1 - dist / LINK) * 0.22;
+            const alpha = (1 - dist / LINK) * 0.16;
             ctx!.strokeStyle = `rgba(${rgb},${alpha})`;
             ctx!.lineWidth = 1;
             ctx!.beginPath();
@@ -86,16 +91,18 @@ export function NetworkBackground({ className }: { className?: string }) {
           }
         }
       }
-      // Nodes
+      // Stars — each gently twinkling around its own baseline.
       for (const n of nodes) {
-        ctx!.fillStyle = `rgba(${rgb},0.6)`;
+        const twinkle = 0.55 + 0.35 * Math.sin(n.phase + t * n.tw);
+        ctx!.fillStyle = `rgba(${rgb},${twinkle.toFixed(3)})`;
         ctx!.beginPath();
-        ctx!.arc(n.x, n.y, 1.6, 0, Math.PI * 2);
+        ctx!.arc(n.x, n.y, n.r, 0, Math.PI * 2);
         ctx!.fill();
       }
     }
 
     function step() {
+      t += 1;
       for (const n of nodes) {
         n.x += n.vx;
         n.y += n.vy;

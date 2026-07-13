@@ -10,8 +10,14 @@
  * separated RGB channels so Tailwind's alpha bridge works.
  * ============================================================
  */
+/*
+ * The palette follows an observatory logic: warm gold is the light of
+ * knowledge emerging from quiet order; blue is a very restrained, cool
+ * secondary reserved mostly for interaction/focus. Dark is the signature
+ * atmosphere (a clear night sky); light is a calm "daylight observatory".
+ */
 :root {
-  /* Surfaces — soft white / steel */
+  /* Surfaces — warm whites */
   --bg: 251 250 247; /* #fbfaf7 soft white */
   --bg-2: 243 241 234; /* #f3f1ea */
   --panel: 255 255 255; /* #ffffff */
@@ -24,13 +30,15 @@
   --line: 230 225 213; /* #e6e1d5 */
   --line-2: 216 210 196; /* #d8d2c4 */
 
-  /* Accents */
-  --accent: 47 86 200; /* #2f56c8 electric blue */
+  /* Accents — gold is primary/luminous, blue is the restrained cool secondary */
+  --gold: 154 116 36; /* #9a7424 warm gold */
+  --amber: 176 128 42; /* #b0802a soft amber */
+  --accent: 47 86 200; /* #2f56c8 restrained blue — interaction/focus */
   --accent-soft: 91 128 239; /* #5b80ef */
-  --emerald: 15 122 91; /* #0f7a5b */
-  --gold: 154 116 36; /* #9a7424 warm gold — used sparingly */
+  --emerald: 15 122 91; /* #0f7a5b operational / recovery */
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
   --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
 
@@ -38,21 +46,24 @@
 }
 
 .dark {
-  --bg: 11 12 15; /* #0b0c0f deep charcoal */
-  --bg-2: 16 18 22; /* #101216 */
-  --panel: 20 22 27; /* #14161b */
-  --panel-2: 24 27 33; /* #181b21 */
+  /* Deep cosmic blacks — the night sky */
+  --bg: 5 6 10; /* #05060a */
+  --bg-2: 9 11 17; /* #090b11 */
+  --panel: 14 16 24; /* #0e1018 */
+  --panel-2: 19 21 30; /* #13151e */
 
-  --ink: 236 238 243; /* #eceef3 */
-  --ink-soft: 182 187 198; /* #b6bbc6 */
-  --dim: 131 137 150; /* #838996 */
-  --line: 35 38 46; /* #23262e */
-  --line-2: 44 48 56; /* #2c3038 */
+  --ink: 237 239 244; /* #edeff4 */
+  --ink-soft: 183 189 200; /* #b7bdc8 */
+  --dim: 130 137 151; /* #828997 */
+  --line: 30 33 43; /* #1e212b */
+  --line-2: 42 46 58; /* #2a2e3a */
 
-  --accent: 124 155 255; /* #7c9bff */
+  /* Luminous gold — knowledge emerging */
+  --gold: 224 178 96; /* #e0b260 */
+  --amber: 236 199 128; /* #ecc780 */
+  --accent: 124 155 255; /* #7c9bff restrained blue */
   --accent-soft: 155 178 255; /* #9bb2ff */
   --emerald: 52 190 148; /* #34be94 */
-  --gold: 211 164 78; /* #d3a44e */
 
   color-scheme: dark;
 }
@@ -72,7 +83,7 @@
     font-feature-settings: "cv02", "cv03", "cv04", "ss01";
   }
   ::selection {
-    background: rgb(var(--accent) / 0.18);
+    background: rgb(var(--gold) / 0.22);
   }
   :focus-visible {
     @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-bg rounded-sm;
@@ -121,12 +132,26 @@
     -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 40%, transparent 100%);
     mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 40%, transparent 100%);
   }
+  /* Warm light emerging — a quiet radial aura behind focal content. */
+  .aura-gold {
+    background: radial-gradient(
+      circle at center,
+      rgb(var(--gold) / 0.16) 0%,
+      rgb(var(--gold) / 0.06) 35%,
+      transparent 70%
+    );
+  }
+  /* A single gold hairline — the eyebrow "tick" and section rules. */
+  .tick {
+    @apply h-px w-6 bg-gold;
+  }
 }
 
 /* Utility: thin scrollbar for content panes */
 @layer utilities {
+  /* "Building Intelligence." — ink resolving into warm gold light. */
   .text-gradient {
-    background: linear-gradient(120deg, rgb(var(--ink)) 20%, rgb(var(--accent)) 120%);
+    background: linear-gradient(115deg, rgb(var(--ink)) 25%, rgb(var(--gold)) 115%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

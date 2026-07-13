@@ -32,12 +32,12 @@ export function RecoveryLoop() {
             cy={c}
             r={r}
             fill="none"
-            stroke="rgb(var(--accent))"
+            stroke="rgb(var(--gold))"
             strokeWidth={2}
             strokeLinecap="round"
             strokeDasharray={`${2 * Math.PI * r * 0.16} ${2 * Math.PI * r}`}
             animate={{ rotate: 360 }}
-            transition={{ duration: 14, ease: "linear", repeat: Infinity }}
+            transition={{ duration: 22, ease: "linear", repeat: Infinity }}
             style={{ transformOrigin: `${c}px ${c}px` }}
           />
         )}
@@ -45,7 +45,7 @@ export function RecoveryLoop() {
         {points.map((p, i) => (
           <g key={p.step}>
             <line x1={c} y1={c} x2={p.x} y2={p.y} stroke="rgb(var(--line))" strokeWidth={1} strokeDasharray="2 4" />
-            <circle cx={p.x} cy={p.y} r={7} fill="rgb(var(--panel))" stroke="rgb(var(--accent))" strokeWidth={1.5} />
+            <circle cx={p.x} cy={p.y} r={7} fill="rgb(var(--panel))" stroke="rgb(var(--gold))" strokeWidth={1.5} />
             <text
               x={p.x}
               y={p.y - 14}

@@ -28,7 +28,7 @@ export function SectionHeading({
     >
       {eyebrow && (
         <span className="eyebrow">
-          <span aria-hidden className="h-px w-6 bg-accent" />
+          <span aria-hidden className="tick" />
           {eyebrow}
         </span>
       )}

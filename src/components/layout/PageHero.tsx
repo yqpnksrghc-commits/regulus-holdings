@@ -24,7 +24,7 @@ export function PageHero({
       <div className="container-lab relative py-20 sm:py-28">
         <Reveal className="flex max-w-3xl flex-col gap-5">
           <span className="eyebrow">
-            <span aria-hidden className="h-px w-6 bg-accent" />
+            <span aria-hidden className="tick" />
             {eyebrow}
           </span>
           <h1 className="text-h1">{title}</h1>
