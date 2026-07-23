@@ -11,9 +11,12 @@ Observation timestamp: 2026-07-23 21:58 America/New_York
 | Production deployment | PASS | Netlify deploy `6a628dd26376df07c04c31a5`; Git release commit `dfc9bf0` |
 | Canonical production URL | PASS | `https://regulusautomation.ca` |
 | Public sitemap | PASS | `https://regulusautomation.ca/sitemap.xml`; 36 live URLs |
-| Google Domain property | BLOCKED | Unknown; Google verification TXT exists, authenticated property access unavailable |
-| Google sitemap submission | NOT STARTED | Unknown |
-| Google discovered URLs | NOT YET OBSERVABLE | Unknown |
+| Google Domain property | PASS | `Ownership auto verified`; Domain name provider |
+| Google sitemap submission | PASS | Submitted 2026-07-23 |
+| Google sitemap acceptance | PASS | `Success` after initial processing |
+| Google discovered URLs | PASS | 36 currently shown; discovery is not indexing |
+| Priority URLs live-tested | PASS | 5/5 available to Google; fetch successful; indexing allowed |
+| Priority URL indexing requested | PASS | 5/5 added to the priority crawl queue |
 | Google indexed pages | NOT YET OBSERVABLE | Unknown |
 | Google impressions | NOT YET OBSERVABLE | Unknown |
 | Google clicks | NOT YET OBSERVABLE | Unknown |
@@ -58,11 +61,11 @@ Unknown data remains unknown until authenticated reports populate. Synthetic Lig
 
 ### σ — Selections
 
-The first measurement checkpoints are seven days, 30 days, and monthly after submission.
+The first measurement checkpoints are seven days, 30 days, and monthly after the 2026-07-23 submission.
 
 ### Minimal Representation
 
-Production is measurable and crawlable; search and conversion baselines are zero/unknown until properties and analytics are authorized.
+Production is measurable and crawlable; Google property/sitemap/request admission passed, while indexing, search performance, and conversion baselines remain unobserved.
 
 ## Provenance
 

@@ -13,7 +13,7 @@ Observation timestamp: 2026-07-23 21:58 America/New_York
 | Local validation | PASS | Typecheck, lint, build, SEO validation, HTTP validation, four Lighthouse runs, and mobile/desktop checks passed. The production branch has no applicable `npm test` script or test suite. |
 | Production deployment | PASS | Netlify production deploy `6a628dd26376df07c04c31a5`, published 2026-07-23 21:57:48 EDT. |
 | Live technical validation | PASS | 36/36 sitemap pages returned 200 with 36 unique titles, one H1, canonical metadata, descriptions, social metadata, parseable JSON-LD, and no broken internal links. |
-| Google admission | BLOCKED | A Google verification TXT record exists at the apex, but no authenticated Search Console surface was available to prove property ownership, submit the sitemap, or request indexing. |
+| Google admission | PASS | Domain property verified; sitemap accepted with `Success` and 36 discovered pages; five live tests passed and five indexing requests entered the priority crawl queue. |
 | Bing admission | BLOCKED | No Bing verification DNS/meta signal and no authenticated Bing Webmaster Tools surface were available. |
 | Analytics activation | BLOCKED | No analytics provider or approved identifier is configured. Semantic conversion hooks are present; no delivery to an analytics destination is claimed. |
 
@@ -104,11 +104,12 @@ These are synthetic Lighthouse results, not real-user Core Web Vitals.
 
 ## Search-Engine Admission Boundary
 
-- Google: an apex Google verification TXT record is present. This is evidence of a verification token, not proof that the current operator account owns a Search Console Domain property.
-- Google sitemap submission: not performed; authenticated Search Console access unavailable.
-- Google priority URL inspection/indexing requests: not performed; authenticated Search Console access unavailable.
+- Google: Domain property `regulusautomation.ca` displayed `Ownership auto verified` through the Domain name provider method.
+- Google sitemap submission: performed; after an initial `Couldn't fetch` state, the table updated to `Success` with 36 discovered pages.
+- Google priority URLs: all five passed live inspection and were added once to the priority crawl queue.
 - Bing ownership, sitemap, URL submission, and site scan: not performed; no authenticated Bing surface or verification signal was available.
 - Indexing, ranking, search traffic, and conversions: not yet observable from available evidence.
+- Detailed evidence: `GOOGLE_SEARCH_CONSOLE_ADMISSION.md`.
 
 ## Kernel Reduction
 

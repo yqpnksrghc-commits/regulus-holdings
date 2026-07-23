@@ -11,6 +11,7 @@ Epistemic: Established Operational Knowledge
 | Service-area language | PASS | Existing commercial content: Toronto, Greater Toronto Area, and Ontario |
 | Production branch | PASS | Remote default, repository deployment policy, Netlify deploy records: `main` |
 | Production host | PASS | DNS, HTTP headers, linked deployment records: Netlify |
+| Google Search Console Domain property | PASS | `regulusautomation.ca` displayed `Ownership auto verified` on 2026-07-23. |
 
 ## Authority Required
 
@@ -20,25 +21,26 @@ Epistemic: Established Operational Knowledge
 | Public address policy | BLOCKED | Ian/company authority must decide whether any legitimate address is public; no private, mailbox, virtual-office, or fabricated storefront address may be used. |
 | Google Business Profile | BLOCKED — BUSINESS IDENTITY AUTHORITY REQUIRED | Ian/company authority must establish direct customer service, eligible customer-facing location or service-area status, approved business name, phone, address visibility, service area, and truthful verification path. |
 | Analytics provider | BLOCKED | Ian/company authority must approve provider, privacy/consent posture, retention, data residency, and production identifier. |
-| Google Search Console account action | BLOCKED | An authenticated owner must open/use the Domain property `regulusautomation.ca`, prove ownership, submit the sitemap, and inspect/request the five priority URLs. |
+| Google indexing observation | NOT YET OBSERVABLE | Monitor the 36 discovered sitemap URLs and five requested URLs; discovery/request is not indexing. |
 | Bing Webmaster Tools account action | BLOCKED | An authenticated owner must import from Google or verify `https://regulusautomation.ca`, submit the sitemap and five priority URLs, then run Site Scan. |
 
 ## Search-Account Operator Handoff
 
 ### Google
 
-1. In Search Console, select or add Domain property `regulusautomation.ca`.
-2. An apex Google verification TXT record already exists. Click **Verify**; if it belongs to a different property/account, obtain the new property’s TXT value and add it at the authoritative DNS provider without removing unrelated TXT/MX records.
-3. Submit `https://regulusautomation.ca/sitemap.xml`.
-4. Inspect and live-test, once each:
+Completed 2026-07-23:
+
+1. Domain property `regulusautomation.ca` verified automatically.
+2. `https://regulusautomation.ca/sitemap.xml` submitted; after an initial fetch delay, current result `Success`, 36 discovered pages.
+3. Inspected and live-tested, once each:
    - `https://regulusautomation.ca/`
    - `https://regulusautomation.ca/automation/automation-opportunity-audit`
    - `https://regulusautomation.ca/industries/medical-dental-clinics`
    - `https://regulusautomation.ca/insights/how-to-identify-workflows-worth-automating`
    - `https://regulusautomation.ca/insights/where-clinics-lose-administrative-time`
-5. Request indexing only after each live test reports availability and allowed indexing. Record request time/status; do not call it indexed.
+4. Each live test passed and each URL was added once to the priority crawl queue.
 
-If metadata verification is required instead of DNS, set `GOOGLE_SITE_VERIFICATION` in Netlify project environment variables, redeploy `main`, verify the rendered tag, and click Verify. Never commit the token.
+Remaining: monitor URL index state. Do not resubmit pending requests or call a request indexed.
 
 ### Bing
 
@@ -65,19 +67,19 @@ Provider approval must define the environment-variable name/identifier, consent 
 
 ### Δ — Distinctions
 
-Confirmed public identity facts are separated from identity, account, and measurement decisions requiring human authority.
+Confirmed public identity and Search Console admission are separated from unresolved indexing, identity, and measurement decisions requiring authority.
 
 ### Constraints
 
-No phone, street address, business profile, analytics provider, or account submission may be invented or activated without authoritative evidence.
+No phone, street address, business profile, analytics provider, DNS change, or unproven search outcome may be invented or activated without authoritative evidence.
 
 ### σ — Selections
 
-Legal name, public email, broad Ontario service area, `main`, and Netlify remain active; all unresolved outward identity/account decisions remain blocked.
+Legal name, public email, broad Ontario service area, `main`, Netlify, and the verified Google Domain property/sitemap remain active; indexing remains unobserved.
 
 ### Minimal Representation
 
-Deploy with the confirmed name/email/service area; hold phone/address/GBP/analytics/search-account actions for authenticated authority.
+Keep the verified Google property, accepted sitemap, and recorded queue requests; hold phone/address/GBP/analytics actions for grounded authority.
 
 ## Provenance
 
