@@ -26,6 +26,7 @@ type ButtonProps = {
   className?: string;
   children: React.ReactNode;
   href?: string;
+  "data-analytics-event"?: string;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 export function Button({
@@ -34,6 +35,7 @@ export function Button({
   size = "md",
   className,
   children,
+  "data-analytics-event": analyticsEvent,
   ...rest
 }: ButtonProps) {
   const classes = cn(base, variants[variant], sizes[size], className);
@@ -43,6 +45,7 @@ export function Button({
       <Link
         href={href}
         className={classes}
+        data-analytics-event={analyticsEvent}
         {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       >
         {children}
@@ -50,7 +53,7 @@ export function Button({
     );
   }
   return (
-    <button className={classes} {...rest}>
+    <button className={classes} data-analytics-event={analyticsEvent} {...rest}>
       {children}
     </button>
   );
