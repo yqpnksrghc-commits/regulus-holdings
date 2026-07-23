@@ -115,6 +115,9 @@ Every page reinforces the four questions the site exists to answer:
 - **[ACCESSIBILITY.md](./ACCESSIBILITY.md)** — WCAG AA audit and how each criterion is met
 - **[CONTENT.md](./CONTENT.md)** — content model, editing workflow, future expansion architecture
 - **[docs/seo/SEO_OPERATOR_CHECKLIST.md](./docs/seo/SEO_OPERATOR_CHECKLIST.md)** — deployment and search-account handoff
+- **[docs/seo/PRODUCTION_RELEASE_EVIDENCE.md](./docs/seo/PRODUCTION_RELEASE_EVIDENCE.md)** — branch, deployment, rollback, and live validation evidence
+- **[docs/seo/SEARCH_MONITORING_BASELINE.md](./docs/seo/SEARCH_MONITORING_BASELINE.md)** — initial production/search measurement baseline
+- **[docs/seo/SEO_AUTHORITY_DECISIONS.md](./docs/seo/SEO_AUTHORITY_DECISIONS.md)** — confirmed identity facts and exact external-account handoffs
 
 ---
 

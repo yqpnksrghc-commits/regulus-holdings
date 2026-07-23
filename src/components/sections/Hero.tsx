@@ -54,7 +54,7 @@ export function Hero() {
           </motion.p>
 
           <motion.div {...anim(4)} className="mt-10">
-            <Button href="/contact?intent=free-automation-audit" size="lg" className="group" data-analytics-event="hero_audit_cta">
+            <Button href="/contact?intent=free-automation-audit" size="lg" className="group" data-analytics-event="audit_inquiry">
               Request an Automation Opportunity Audit <Arrow />
             </Button>
           </motion.div>

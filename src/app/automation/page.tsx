@@ -36,7 +36,7 @@ export default function AutomationPage() {
             Tell us where an inquiry can stall. We will review the fit and, if useful, propose a
             scoped CAD $500 paid audit before any implementation.
           </p>
-          <Button href="/contact?intent=free-automation-audit" size="lg" className="mt-6" data-analytics-event="audit_cta">
+          <Button href="/contact?intent=free-automation-audit" size="lg" className="mt-6" data-analytics-event="audit_inquiry">
             Request a Free Automation Audit
           </Button>
         </div>

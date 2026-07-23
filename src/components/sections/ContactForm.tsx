@@ -62,7 +62,13 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5" aria-describedby="form-note">
+    <form
+      onSubmit={onSubmit}
+      noValidate
+      className="flex flex-col gap-5"
+      aria-describedby="form-note"
+      data-analytics-event="contact_form_submission"
+    >
       {/* Honeypot — visually hidden, off the tab order, ignored by humans. */}
       <div aria-hidden className="absolute left-[-9999px] h-0 w-0 overflow-hidden" style={{ position: "absolute" }}>
         <label htmlFor="company_website">Do not fill this field</label>

@@ -55,7 +55,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
               <a className="link-underline" href="/industries/medical-dental-clinics">Automation for clinics</a>
               <a className="link-underline" href="/industries/professional-services">Automation for professional services</a>
             </div>
-            <Button href="/contact?intent=free-automation-audit" size="lg" className="mt-7" data-analytics-event="service_audit_cta">
+            <Button href="/contact?intent=free-automation-audit" size="lg" className="mt-7" data-analytics-event="service_page_cta_activation">
               Request a Free Automation Audit
             </Button>
           </article>

@@ -27,7 +27,11 @@ export default function ContactPage() {
           <Reveal delay={0.05} className="flex flex-col gap-8">
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-wider text-dim">Direct</h2>
-              <a href={`mailto:${site.email}`} className="link-underline mt-2 block text-lg font-medium text-ink">
+              <a
+                href={`mailto:${site.email}`}
+                className="link-underline mt-2 block text-lg font-medium text-ink"
+                data-analytics-event="email_contact_activation"
+              >
                 {site.email}
               </a>
             </div>
