@@ -50,6 +50,7 @@ npm run build      # production build (static export of all routes)
 npm run start      # serve the production build
 npm run lint       # ESLint (next/core-web-vitals + typescript)
 npm run typecheck  # tsc --noEmit
+npm run seo:validate # validate production SEO metadata, links, sitemap, robots, JSON-LD
 ```
 
 Requires Node ≥ 20.
@@ -113,6 +114,7 @@ Every page reinforces the four questions the site exists to answer:
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** — deploy targets, GitHub structure, CI/CD, env
 - **[ACCESSIBILITY.md](./ACCESSIBILITY.md)** — WCAG AA audit and how each criterion is met
 - **[CONTENT.md](./CONTENT.md)** — content model, editing workflow, future expansion architecture
+- **[docs/seo/SEO_OPERATOR_CHECKLIST.md](./docs/seo/SEO_OPERATOR_CHECKLIST.md)** — deployment and search-account handoff
 
 ---
 

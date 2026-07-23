@@ -77,8 +77,8 @@ export const values = [
 export const industries = [
   { name: "Manufacturing", note: "Material and energy recovery on the line." },
   { name: "Construction", note: "Capacity and waste across the project." },
-  { name: "Professional Services", note: "Knowledge and time, made recoverable." },
-  { name: "Healthcare", note: "Decisions and resources under real constraint." },
+  { name: "Professional Services", note: "Knowledge and time, made recoverable.", href: "/industries/professional-services" },
+  { name: "Healthcare", note: "Clinic administration under real constraint.", href: "/industries/medical-dental-clinics" },
   { name: "Finance", note: "Trapped capital and mispriced risk." },
   { name: "Government", note: "Stewardship of public capacity." },
   { name: "Energy", note: "Loss quantified within physical law." },

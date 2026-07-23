@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { site } from "@/lib/site";
-import { organizationJsonLd } from "@/lib/seo";
+import { deploymentIsIndexable, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -16,14 +16,6 @@ export const metadata: Metadata = {
   description: site.description,
   applicationName: site.name,
   alternates: { canonical: site.url },
-  keywords: [
-    "Regulus",
-    "value recovery",
-    "corporate intelligence",
-    "decision intelligence",
-    "discovery engine",
-    "avoidable loss",
-  ],
   authors: [{ name: site.name }],
   creator: site.name,
   openGraph: {
@@ -36,7 +28,11 @@ export const metadata: Metadata = {
     images: [{ url: "/og.png", width: 1200, height: 630, alt: `${site.name} — ${site.tagline}` }],
   },
   twitter: { card: "summary_large_image", images: ["/og.png"] },
-  robots: { index: true, follow: true },
+  robots: { index: deploymentIsIndexable, follow: deploymentIsIndexable },
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } : {}),
+  },
 };
 
 export const viewport: Viewport = {
@@ -77,7 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify([organizationJsonLd(), websiteJsonLd()]) }}
         />
       </body>
     </html>

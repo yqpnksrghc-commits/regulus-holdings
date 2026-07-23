@@ -1,0 +1,7 @@
+import Link from "next/link";
+import { buildMetadata } from "@/lib/seo";
+import { PageHero } from "@/components/layout/PageHero";
+import { Section } from "@/components/ui/Section";
+export const metadata=buildMetadata({title:"Automation Insights",path:"/insights",description:"Evidence-first guidance from Regulus Automation on workflow selection, operational loss, clinic administration, and responsible automation."});
+const posts=[["/insights/how-to-identify-workflows-worth-automating","How to Identify Workflows Worth Automating","A practical test for finding bounded, measurable automation opportunities."],["/insights/where-clinics-lose-administrative-time","Where Medical and Dental Clinics Commonly Lose Administrative Time","An evidence-aware map of recurring administrative friction in clinic workflows."]];
+export default function Insights(){return <><PageHero eyebrow="Insights" title="Practical reasoning before automation." lead="Clear methods for identifying workflow friction, separating evidence from assumptions, and choosing a useful first intervention."/><Section><div className="grid gap-6">{posts.map(([href,title,body])=><article key={href} className="rounded-3xl border border-line bg-panel p-8"><p className="eyebrow">Guide</p><h2 className="mt-3 text-h2"><Link href={href}>{title}</Link></h2><p className="mt-4 text-ink-soft">{body}</p><Link className="mt-6 inline-block link-underline" href={href}>Read the guide</Link></article>)}</div></Section></>}

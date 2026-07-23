@@ -19,7 +19,12 @@ const CANONICAL_ORIGIN = "https://regulusautomation.ca";
 const LEGAL_NAME = "Regulus Automation Inc.";
 
 const routes = [
-  "/", "/solutions", "/discovery", "/research", "/products",
+  "/", "/automation", "/automation/automation-opportunity-audit", "/automation/business-process-automation",
+  "/automation/ai-workflow-automation", "/automation/operational-intelligence",
+  "/industries", "/industries/medical-dental-clinics", "/industries/professional-services",
+  "/insights", "/insights/how-to-identify-workflows-worth-automating",
+  "/insights/where-clinics-lose-administrative-time",
+  "/solutions", "/discovery", "/research", "/products",
   "/about", "/philosophy", "/careers", "/contact", "/privacy", "/terms",
   "/solutions/corporate-intelligence", "/solutions/financial-intelligence",
   "/solutions/knowledge-intelligence", "/solutions/psychological-intelligence",
@@ -68,7 +73,7 @@ for (const route of routes) {
   const desc = rx(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i, html);
 
   if (!title) errors.push(`NO <title>: ${route}`);
-  else if (!title.includes(LEGAL_NAME)) errors.push(`TITLE missing legal name: ${route} -> "${title}"`);
+  else if (!/Regulus(?: Automation)?/.test(title)) errors.push(`TITLE missing public brand: ${route} -> "${title}"`);
   if (!canonical) errors.push(`NO canonical: ${route}`);
   else if (!canonical.startsWith(CANONICAL_ORIGIN)) errors.push(`CANONICAL wrong origin: ${route} -> ${canonical}`);
   if (!ogTitle) warnings.push(`no og:title: ${route}`);

@@ -1,0 +1,68 @@
+export const commercialServices = [
+  {
+    slug: "automation-opportunity-audit",
+    name: "Automation Opportunity Audit",
+    description: "An evidence-first review of where repetitive work, delayed response, fragmented information, and avoidable operational loss may be occurring.",
+    problem: "Organizations often feel the cost of manual work before they can locate, measure, or prioritize it.",
+    outcome: "A documented opportunity map that separates observations, assumptions, unknowns, and practical next steps. Diagnosis is separate from implementation.",
+    measures: ["observable workflow delays", "repetitive handoffs and re-entry", "missing ownership or follow-up states"],
+  },
+  {
+    slug: "business-process-automation",
+    name: "Business Process Automation",
+    description: "Design and implementation of accountable workflows that reduce repetitive administration while preserving human decisions.",
+    problem: "Manual handoffs, duplicate entry, and inbox-driven processes consume time and make work difficult to trace.",
+    outcome: "A scoped workflow with explicit inputs, states, exceptions, human controls, and measurable operating signals.",
+    measures: ["manual steps per workflow", "handoff delay", "exceptions requiring human action"],
+  },
+  {
+    slug: "ai-workflow-automation",
+    name: "AI Workflow Automation",
+    description: "Carefully bounded AI assistance for classification, drafting, routing, and knowledge-supported work.",
+    problem: "Teams can spend substantial time interpreting routine inputs or locating the context needed for a next action.",
+    outcome: "An evidence-bounded workflow that uses AI where appropriate and routes uncertainty or consequential decisions to people.",
+    measures: ["items routed correctly", "human review volume", "unknown and exception handling"],
+  },
+  {
+    slug: "operational-intelligence",
+    name: "Operational Intelligence",
+    description: "Decision surfaces that connect workflow evidence, bottlenecks, ownership, and outcomes without inventing certainty.",
+    problem: "Leaders may have activity data without a coherent view of where work stalls, value leaks, or decisions wait.",
+    outcome: "A traceable operational view built from available source systems, with absent evidence shown as unknown.",
+    measures: ["workflow state coverage", "overdue actions", "evidence completeness"],
+  },
+  {
+    slug: "ai-receptionist",
+    name: "AI Receptionist",
+    description: "A measured first-response layer for calls and inquiries when your team is busy or unavailable.",
+    problem: "New inquiries can arrive while staff are serving clients, after hours, or between systems.",
+    outcome: "Acknowledge the inquiry immediately, capture the reason for contact, and route the next step to a human-owned queue.",
+    measures: ["time to first acknowledgement", "qualified inquiries captured", "human handoffs completed"],
+  },
+  {
+    slug: "missed-lead-recovery",
+    name: "Missed Lead Recovery",
+    description: "Recover follow-up opportunities from unanswered calls and incomplete inquiry paths.",
+    problem: "A missed call or delayed reply can become an untracked, unworked lead.",
+    outcome: "Create an immediate acknowledgement, a clear follow-up task, and a visible pipeline record without inventing an outcome.",
+    measures: ["missed inquiries acknowledged", "follow-ups completed on time", "consultation requests recovered"],
+  },
+  {
+    slug: "appointment-automation",
+    name: "Appointment Automation",
+    description: "Move qualified inquiries into a clear appointment-request workflow while preserving human control.",
+    problem: "Phone and email coordination can create delays, duplicate work, and incomplete booking context.",
+    outcome: "Collect the information needed for a consultation request, route it to the right calendar process, and track its state.",
+    measures: ["qualified appointment requests", "time from inquiry to request", "requests awaiting staff action"],
+  },
+  {
+    slug: "follow-up-automation",
+    name: "Follow-Up Automation",
+    description: "Make ownership, timing, and status visible for every approved follow-up.",
+    problem: "Follow-up can depend on memory, inbox searches, or disconnected notes.",
+    outcome: "Schedule the next action, alert the responsible operator, and keep the pipeline current.",
+    measures: ["overdue follow-ups", "follow-up completion rate", "reply and meeting progression"],
+  },
+] as const;
+
+export type CommercialService = (typeof commercialServices)[number];

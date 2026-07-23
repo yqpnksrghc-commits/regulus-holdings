@@ -12,12 +12,11 @@ export const site = {
   displayName: "Regulus Automation",
   tagline: "Recovering Value. Building Intelligence.",
   description:
-    "Regulus builds intelligent systems that identify avoidable loss, recover value, and help organizations make better decisions.",
+    "Regulus helps Ontario service businesses recover missed leads and improve appointment follow-up with evidence-first automation.",
   mission: "Identify avoidable loss, quantify it, and recover persistent value.",
   url: "https://regulusautomation.ca",
   locale: "en_CA",
   email: "info@regulusautomation.ca",
-  founded: 2024,
   // Social links are intentionally empty: display only verified, explicitly
   // supplied URLs. Do NOT add placeholder/inferred handles.
   social: [] as { label: string; href: string }[],
@@ -27,12 +26,13 @@ export type NavItem = { label: string; href: string; description?: string };
 
 /** Primary navigation — mirrored in the header and the footer sitemap. */
 export const primaryNav: NavItem[] = [
-  { label: "Solutions", href: "/solutions", description: "Ten domains of applied intelligence." },
+  { label: "Services", href: "/automation", description: "Lead response, appointments, and follow-up automation." },
+  { label: "Industries", href: "/industries", description: "Workflow automation shaped around real operating contexts." },
+  { label: "Insights", href: "/insights", description: "Practical guidance for evaluating automation opportunities." },
   { label: "Discovery", href: "/discovery", description: "How Regulus finds opportunity." },
   { label: "Research", href: "/research", description: "Evidence, clearly classified." },
   { label: "Products", href: "/products", description: "What is shipping and what is next." },
   { label: "About", href: "/about", description: "Mission, doctrine, and long view." },
-  { label: "Careers", href: "/careers", description: "Builders, scientists, teachers." },
 ];
 
 export const footerNav: { title: string; items: NavItem[] }[] = [
@@ -54,6 +54,8 @@ export const footerNav: { title: string; items: NavItem[] }[] = [
       { label: "Discovery Engine", href: "/discovery" },
       { label: "Products", href: "/products" },
       { label: "Research", href: "/research" },
+      { label: "Industries", href: "/industries" },
+      { label: "Insights", href: "/insights" },
     ],
   },
   {

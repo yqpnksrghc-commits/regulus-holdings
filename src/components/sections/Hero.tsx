@@ -48,24 +48,22 @@ export function Hero() {
           </h1>
 
           <motion.p {...anim(3)} className="mt-7 max-w-2xl text-lead text-ink-soft">
-            Regulus develops intelligent systems that identify avoidable loss, recover value, and
-            help organizations make better decisions.
+            Regulus builds intelligent workflow and operational systems for organizations in
+            Toronto and across Ontario. We identify avoidable loss, automate repetitive work,
+            connect fragmented information, and help leaders recover measurable value.
           </motion.p>
 
-          <motion.div {...anim(4)} className="mt-10 flex flex-col gap-3 sm:flex-row">
-            <Button href="/solutions" size="lg" className="group">
-              Explore Regulus <Arrow />
-            </Button>
-            <Button href="/contact" variant="secondary" size="lg">
-              Contact us
+          <motion.div {...anim(4)} className="mt-10">
+            <Button href="/contact?intent=free-automation-audit" size="lg" className="group" data-analytics-event="hero_audit_cta">
+              Request an Automation Opportunity Audit <Arrow />
             </Button>
           </motion.div>
 
           <motion.dl {...anim(5)} className="mt-16 grid max-w-lg grid-cols-3 gap-6 border-t border-line pt-8">
             {[
-              { k: "10", v: "Intelligence domains" },
-              { k: "5-step", v: "Recovery loop" },
-              { k: "Evidence", v: "Over assumptions" },
+              { k: "Fast", v: "Lead acknowledgement" },
+              { k: "Visible", v: "Follow-up ownership" },
+              { k: "Measured", v: "Before claims" },
             ].map((s) => (
               <div key={s.v}>
                 <dt className="text-2xl font-semibold text-ink">{s.k}</dt>

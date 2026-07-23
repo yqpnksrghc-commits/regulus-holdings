@@ -10,6 +10,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "validate": "node scripts/validate.mjs",
+    "seo:validate": "node scripts/seo-validate.mjs",
     "audit": "npm audit --omit=dev"
   },
   "dependencies": {
