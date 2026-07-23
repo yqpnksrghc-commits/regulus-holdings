@@ -18,7 +18,7 @@ const principles = [
 
 export function Ethos() {
   return (
-    <Section id="ethos">
+    <Section id="ethos" className="overflow-hidden">
       <div className="relative">
         <div aria-hidden className="pointer-events-none absolute -top-24 left-1/2 h-[30rem] w-[30rem] -translate-x-1/2 rounded-full aura-gold opacity-70" />
         <Reveal className="relative mx-auto max-w-2xl text-center">
