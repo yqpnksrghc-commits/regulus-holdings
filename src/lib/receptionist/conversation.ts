@@ -1,0 +1,215 @@
+/**
+ * Conversation orchestrator — the pure reducer at the center of the engine.
+ *
+ * It sequences the seven separated concerns for one visitor turn:
+ *   1. sanitize + guard (injection/spam)   [injection.ts, done by caller]
+ *   2. model proposes reply + extraction    [model adapter]
+ *   3. deterministic extraction (authoritative) + reconcile model proposal
+ *   4. policy validation (knowledge/consent/booking gates)
+ *   5. action PROPOSAL -> decided effect
+ *   6. validated state transition
+ *   7. user-facing reply
+ *
+ * It performs NO I/O. It returns the next record plus an `effect` the caller
+ * executes deterministically (lead creation, booking) — the model never acts.
+ */
+import type { LeadInput } from "@/lib/leads";
+import { detectInjection, detectSpam, redactSecrets, sanitize } from "@/lib/receptionist/injection";
+import { extractFromVisitorText, hasMinimumViableLead, reconcileModelExtraction } from "@/lib/receptionist/extraction";
+import { AI_DISCLOSURE } from "@/lib/receptionist/knowledge";
+import type { ReceptionistModel } from "@/lib/receptionist/model/adapter";
+import { transition } from "@/lib/receptionist/state-machine";
+import {
+  emptyQualification,
+  isDurableBookingEvidence,
+  isTerminal,
+  type BookingEvidence,
+  type ConversationRecord,
+  type ConversationState,
+  type QualificationFields,
+} from "@/lib/receptionist/schema";
+
+export const GREETING_MESSAGE =
+  `Hi — welcome to Regulus Automation. ${AI_DISCLOSURE} What brings you here today?`;
+
+/** A booking provider returns durable calendar evidence, or null. No calendar
+ * is configured in Phase 1, so the default provider always returns null and
+ * every booking attempt fails closed to FOLLOW_UP_REQUIRED. */
+export type BookingProvider = (record: ConversationRecord) => Promise<BookingEvidence | null>;
+export const noCalendarProvider: BookingProvider = async () => null;
+
+export type TurnEffect =
+  | { kind: "none" }
+  | { kind: "create_lead"; reason: "qualified" | "human_requested" | "follow_up"; leadInput: LeadInput };
+
+export function newConversation(id: string, sourcePage: string | null, campaign: string | null, now: Date): ConversationRecord {
+  const iso = now.toISOString();
+  return {
+    schema_version: "1.0",
+    conversation_id: id,
+    channel: "website",
+    state: "GREETING",
+    qualification: { ...emptyQualification(), source_page: sourcePage, campaign_parameters: campaign },
+    confidence_by_field: {},
+    transcript: [{ role: "receptionist", text: GREETING_MESSAGE, at: iso }],
+    lead_id: null,
+    lead_pipeline_state: null,
+    booking_evidence: null,
+    follow_up_required: false,
+    human_takeover: false,
+    duplicate_of: null,
+    flags: [],
+    error: null,
+    created_at: iso,
+    updated_at: iso,
+    source_page: sourcePage,
+    campaign_parameters: campaign,
+    extraction_source: "deterministic",
+  };
+}
+
+function mergeConfidence(a: ConversationRecord["confidence_by_field"], b: ConversationRecord["confidence_by_field"]) {
+  const out = { ...a };
+  for (const [k, v] of Object.entries(b)) if (typeof v === "number") out[k as keyof typeof out] = v;
+  return out;
+}
+
+/** Concatenate all visitor text for the deterministic extractor. */
+function allVisitorText(record: ConversationRecord): string {
+  return record.transcript.filter((t) => t.role === "visitor").map((t) => t.text).join("\n");
+}
+
+function toLeadInput(record: ConversationRecord, now: number): LeadInput {
+  const q = record.qualification;
+  const description =
+    [q.business_problem, q.current_process, q.desired_outcome, q.inquiry_type].filter(Boolean).join(" — ") ||
+    "Website receptionist conversation — details captured in transcript.";
+  return {
+    name: q.visitor_name || "Website visitor",
+    email: q.email || "",
+    organization: q.company_name || "",
+    value_leak_description: description.length >= 10 ? description : `${description} (receptionist)`,
+    source_page: q.source_page || record.source_page || "/",
+    referral_data: "",
+    utm: q.campaign_parameters || record.campaign_parameters || "",
+    consent: q.consent_to_follow_up,
+    company_website: "", // never a honeypot hit — the receptionist guards spam per-turn
+    // The conversation's own per-turn guards stand in for the form-timing check.
+    form_started_at: now - 3000,
+  };
+}
+
+/** Decide the active (non-terminal) next state from what is still missing. */
+function activeNext(from: ConversationState, q: QualificationFields): ConversationState {
+  if (!q.inquiry_type && !q.business_problem) return from === "GREETING" ? "INTENT_IDENTIFIED" : "QUALIFYING";
+  if (!q.email) return "CONTACT_CAPTURE";
+  return "QUALIFYING";
+}
+
+function applyState(record: ConversationRecord, to: ConversationState) {
+  const { state, flag } = transition(record.state, to);
+  record.state = state;
+  if (flag) record.flags.push(flag);
+}
+
+/**
+ * Process one visitor message. Pure: returns the mutated-copy record and the
+ * effect for the caller to execute. `rawMessage` is untrusted; it is sanitized
+ * here so callers cannot forget.
+ */
+export async function processVisitorTurn(
+  prior: ConversationRecord,
+  rawMessage: unknown,
+  model: ReceptionistModel,
+  opts: { now?: Date; booking?: BookingProvider } = {},
+): Promise<{ record: ConversationRecord; reply: string; effect: TurnEffect }> {
+  const now = opts.now ?? new Date();
+  const booking = opts.booking ?? noCalendarProvider;
+  const record: ConversationRecord = structuredClone(prior);
+
+  if (isTerminal(record.state)) {
+    return { record, reply: "This conversation has been handed to the Regulus team. You can email info@regulusautomation.ca anytime.", effect: { kind: "none" } };
+  }
+
+  const clean = sanitize(rawMessage);
+  if (!clean) {
+    return { record, reply: "Sorry, I didn't catch that — could you rephrase?", effect: { kind: "none" } };
+  }
+
+  const injectionFlags = detectInjection(clean);
+  const spamFlags = detectSpam(clean);
+  const visitorFlags = [...injectionFlags, ...spamFlags];
+  record.transcript.push({ role: "visitor", text: clean, at: now.toISOString(), ...(visitorFlags.length ? { flags: visitorFlags } : {}) });
+  for (const f of visitorFlags) if (!record.flags.includes(f)) record.flags.push(f);
+
+  // Hard spam gate: obvious spam terminates without a lead (auditable non-lead).
+  if (spamFlags.length) {
+    applyState(record, "SPAM");
+    record.updated_at = now.toISOString();
+    return { record, reply: "Thanks for reaching out. If this is a genuine business inquiry, please email info@regulusautomation.ca.", effect: { kind: "none" } };
+  }
+
+  // 2. Model proposes (deterministic adapter by default; production via config).
+  let proposal;
+  try {
+    proposal = await model.respond({ transcript: record.transcript, qualification: record.qualification, sourcePage: record.source_page, visitorFlags });
+    record.extraction_source = model.name === "deterministic" ? "deterministic" : "model+deterministic";
+  } catch {
+    applyState(record, "ERROR_RECOVERABLE");
+    record.error = "model_unavailable";
+    record.updated_at = now.toISOString();
+    return { record, reply: "I'm having a brief technical issue. Please try again, or email info@regulusautomation.ca and the team will help.", effect: { kind: "none" } };
+  }
+
+  // 3. Deterministic extraction is authoritative; model proposal is reconciled.
+  const det = extractFromVisitorText(allVisitorText(record), record.qualification);
+  record.qualification = det.fields;
+  record.confidence_by_field = mergeConfidence(record.confidence_by_field, det.confidence);
+  const rec = reconcileModelExtraction(record.qualification, proposal.proposedExtraction);
+  record.qualification = rec.fields;
+  record.confidence_by_field = mergeConfidence(record.confidence_by_field, rec.confidence);
+
+  const reply = redactSecrets(proposal.reply).slice(0, 2000);
+  record.transcript.push({ role: "receptionist", text: reply, at: now.toISOString() });
+  record.updated_at = now.toISOString();
+
+  const q = record.qualification;
+  const action = proposal.proposedAction?.kind ?? "none";
+  let effect: TurnEffect = { kind: "none" };
+
+  // 4/5/6. Policy → decided effect → validated transition.
+  if (q.human_requested || action === "request_human") {
+    record.human_takeover = true;
+    record.follow_up_required = true;
+    applyState(record, "HUMAN_REQUESTED");
+    if (q.email) effect = { kind: "create_lead", reason: "human_requested", leadInput: toLeadInput(record, now.getTime()) };
+  } else if (action === "mark_out_of_scope") {
+    applyState(record, "OUT_OF_SCOPE");
+  } else if (action === "offer_booking" || (q.booking_intent && hasMinimumViableLead(q))) {
+    applyState(record, activeNext(record.state, q));
+    applyState(record, "READY_TO_BOOK");
+    const evidence = await booking(record);
+    if (isDurableBookingEvidence(evidence)) {
+      record.booking_evidence = evidence;
+      applyState(record, "BOOKED");
+      if (q.email) effect = { kind: "create_lead", reason: "qualified", leadInput: toLeadInput(record, now.getTime()) };
+    } else {
+      // Booking has no durable calendar evidence -> FOLLOW_UP_REQUIRED, never BOOKED.
+      record.follow_up_required = true;
+      applyState(record, "FOLLOW_UP_REQUIRED");
+      if (q.email) effect = { kind: "create_lead", reason: "follow_up", leadInput: toLeadInput(record, now.getTime()) };
+    }
+  } else if (action === "create_lead" || (hasMinimumViableLead(q) && q.email)) {
+    if (q.email) {
+      applyState(record, activeNext(record.state, q));
+      effect = { kind: "create_lead", reason: "qualified", leadInput: toLeadInput(record, now.getTime()) };
+      applyState(record, "COMPLETED");
+    } else {
+      applyState(record, activeNext(record.state, q));
+    }
+  } else {
+    applyState(record, activeNext(record.state, q));
+  }
+
+  return { record, reply, effect };
+}
