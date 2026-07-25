@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { site } from "@/lib/site";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -11,14 +10,14 @@ const field =
   "w-full rounded-xl border border-line-2 bg-panel px-4 py-3 text-ink placeholder:text-dim transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30";
 
 /**
- * Progressive-enhancement contact form. With no backend wired, a valid submit
- * composes a pre-filled email via the user's mail client (mailto), which keeps
- * the form honest and functional for a static deployment. Swap `onSubmit` for a
- * POST to /api/contact when a backend is available (see CONTENT.md).
+ * Server-backed lead capture. Durable storage is authoritative; notification is best-effort.
  */
 export function ContactForm() {
   const [errors, setErrors] = useState<Errors>({});
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [startedAt] = useState(() => Date.now());
 
   function validate(data: { name: string; email: string; message: string }): Errors {
     const e: Errors = {};
@@ -28,7 +27,7 @@ export function ContactForm() {
     return e;
   }
 
-  function onSubmit(ev: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
     const form = ev.currentTarget;
     // Honeypot: a real user never fills this hidden field. A bot that
@@ -53,22 +52,18 @@ export function ContactForm() {
       first?.focus();
       return;
     }
-    const subject = encodeURIComponent(`Inquiry from ${data.name}${data.org ? ` (${data.org})` : ""}`);
-    const body = encodeURIComponent(
-      `${data.message}\n\n— ${data.name}\n${data.email}${data.org ? `\n${data.org}` : ""}`,
-    );
-    window.location.href = `mailto:${site.email}?subject=${subject}&body=${body}`;
-    setSent(true);
+    setSubmitting(true); setFormError("");
+    try {
+      const response = await fetch("/api/leads", {method:"POST",headers:{"Content-Type":"application/json","Idempotency-Key":crypto.randomUUID()},body:JSON.stringify({name:data.name,email:data.email,organization:data.org,value_leak_description:data.message,source_page:window.location.pathname,referral_data:document.referrer,utm:window.location.search,consent:false,company_website:trap,form_started_at:startedAt})});
+      const result = await response.json();
+      if(!response.ok || !result.ok){setFormError(result.error || "We couldn’t submit your message. Please try again.");return;}
+      setSent(true); form.reset();
+    } catch { setFormError("We couldn’t submit your message. Please try again."); }
+    finally { setSubmitting(false); }
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      noValidate
-      className="flex flex-col gap-5"
-      aria-describedby="form-note"
-      data-analytics-event="contact_form_submission"
-    >
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5" aria-describedby="form-note">
       {/* Honeypot — visually hidden, off the tab order, ignored by humans. */}
       <div aria-hidden className="absolute left-[-9999px] h-0 w-0 overflow-hidden" style={{ position: "absolute" }}>
         <label htmlFor="company_website">Do not fill this field</label>
@@ -105,15 +100,14 @@ export function ContactForm() {
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Button type="submit" size="lg">
-          Send message
+        <Button type="submit" size="lg" disabled={submitting || sent}>
+          {submitting ? "Sending…" : sent ? "Message received" : "Send message"}
         </Button>
         <p id="form-note" className="text-xs text-dim" role={sent ? "status" : undefined}>
-          {sent
-            ? "Your email client should now be open with a pre-filled message."
-            : `Opens your mail client, or write us directly at ${site.email}.`}
+          {sent ? "Thank you. Your message is securely recorded for review." : "Your message is submitted securely to Regulus for review."}
         </p>
       </div>
+      {formError && <p role="alert" className="text-sm text-red-500">{formError}</p>}
     </form>
   );
 }

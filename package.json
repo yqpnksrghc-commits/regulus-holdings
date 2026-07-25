@@ -9,11 +9,14 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "receptionist:admin": "tsx scripts/receptionist-admin.ts",
     "validate": "node scripts/validate.mjs",
     "seo:validate": "node scripts/seo-validate.mjs",
     "audit": "npm audit --omit=dev"
   },
   "dependencies": {
+    "@netlify/blobs": "^10.7.9",
     "framer-motion": "^11.11.17",
     "next": "^15.5.20",
     "next-themes": "^0.4.4",
@@ -29,6 +32,7 @@
     "eslint-config-next": "^15.5.20",
     "postcss": "^8.5.18",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.1",
     "typescript": "^5.7.3"
   },
   "engines": {

@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ReadingProgress } from "@/components/layout/ReadingProgress";
+import { Receptionist } from "@/components/receptionist/Receptionist";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -69,6 +70,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </main>
           <Footer />
+          <Receptionist />
         </ThemeProvider>
         <script
           type="application/ld+json"
