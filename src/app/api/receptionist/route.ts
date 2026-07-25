@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { GREETING_MESSAGE, newConversation, noCalendarProvider, processVisitorTurn } from "@/lib/receptionist/conversation";
+import { GREETING_MESSAGE, newConversation, processVisitorTurn } from "@/lib/receptionist/conversation";
 import { sanitize, MAX_TURNS } from "@/lib/receptionist/injection";
 import { selectModel } from "@/lib/receptionist/model";
-import { getConversation, notifyMaintainer, persistLead, rateLimited, receptionistSalt, saveConversation, seenTurn } from "@/lib/receptionist/store";
+import { selectCalendar } from "@/lib/receptionist/calendar";
+import { notifyLead } from "@/lib/receptionist/notify";
+import { getConversation, persistLead, rateLimited, receptionistSalt, recordTurn, saveConversation, seenTurn } from "@/lib/receptionist/store";
 import { isTerminal } from "@/lib/receptionist/schema";
 
 export const runtime = "nodejs";
@@ -75,7 +77,7 @@ export async function POST(request: Request) {
     }
 
     const model = selectModel();
-    const { record: next, reply, effect } = await processVisitorTurn(record, body.message, model, { now, booking: noCalendarProvider });
+    const { record: next, reply, effect } = await processVisitorTurn(record, body.message, model, { now, booking: selectCalendar() });
 
     if (effect.kind === "create_lead") {
       const result = await persistLead(effect.leadInput, salt);
@@ -90,7 +92,12 @@ export async function POST(request: Request) {
     }
 
     await saveConversation(next);
-    if (isTerminal(next.state) || next.lead_id) void notifyMaintainer(next);
+    // Idempotency marker is written ONLY after the durable save, so a mid-turn
+    // failure never marks a turn "seen" without persisting its result.
+    if (idem) await recordTurn(id, idem, salt);
+    // Notify AFTER persistence, only for a qualified (lead-bearing) turn. Idempotent,
+    // retried, delivery-status logged, and fully contained — a lead already exists.
+    if (next.lead_id) await notifyLead(next);
 
     return json(safeView(next, reply, { lead_created: Boolean(next.lead_id) }));
   } catch {

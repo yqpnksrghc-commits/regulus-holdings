@@ -98,7 +98,13 @@ or deterministic system facts; anything else defers to a human. See
 1. **Env (Netlify → Site settings → Environment variables):**
    - `RECEPTIONIST_RATE_LIMIT_SALT` (or reuse `LEAD_RATE_LIMIT_SALT`), ≥32 chars — **required**.
    - Leave `RECEPTIONIST_MODEL_PROVIDER` unset for the deterministic adapter (Phase-1 default).
-   - Optional: `RECEPTIONIST_NOTIFICATION_WEBHOOK_URL` (+ `_TOKEN`).
+   - **Lead notification (recommended — closes the revenue loop):**
+     `RECEPTIONIST_NOTIFICATION_WEBHOOK_URL` (+ `_TOKEN`), or reuse `LEAD_NOTIFICATION_WEBHOOK_URL`/`_TOKEN`.
+     Fires once per qualified lead, after durable save; idempotent, retried (3×), and
+     delivery status is logged to the lead (`notification_status`) + a `notifications/<lead_id>` marker.
+   - **Calendar (optional — enables real booked calls):** `GOOGLE_CALENDAR_ENABLED=true`,
+     `GOOGLE_CALENDAR_ID`, `GOOGLE_CALENDAR_ACCESS_TOKEN`. Off by default → bookings
+     resolve to `FOLLOW_UP_REQUIRED`; the engine never reports `BOOKED` without provider confirmation.
 2. **Blobs:** no setup — `@netlify/blobs` auto-provisions the named stores on Netlify.
 3. **Deploy:** the site's normal Netlify build. New route: `ƒ /api/receptionist`.
 4. **Verify:** load any page → "Ask Regulus" launcher → greeting appears; submit a
@@ -115,15 +121,26 @@ Anthropic adapter activates with the deterministic adapter as automatic fallback
 
 Requires `netlify link` to the production site (same as `ahura:invitations`).
 ```bash
-npm run receptionist:admin -- list                 # all conversations
-npm run receptionist:admin -- list --state FOLLOW_UP_REQUIRED
-npm run receptionist:admin -- follow-ups           # shortcut for the above
+npm run receptionist:admin -- unread               # review queue: leads awaiting review (newest first)
+npm run receptionist:admin -- leads --q clinic     # all leads, optional text search
+npm run receptionist:admin -- lead --id <lead-id>  # one lead, full detail
+npm run receptionist:admin -- list --flagged       # conversations with security flags
+npm run receptionist:admin -- follow-ups           # conversations needing follow-up
+npm run receptionist:admin -- search --q missed    # search conversations (email/name/problem/transcript)
 npm run receptionist:admin -- show --id <id>       # full transcript + qualification + evidence
+npm run receptionist:admin -- archived             # list archived conversations
+npm run receptionist:admin -- archive --before-days 90   # retention sweep (terminal only)
 ```
 `show` surfaces state, contact + qualification, confidence warnings (fields
 <0.6), booking evidence, follow-up/human-takeover, duplicate + lead linkage,
-flags, and errors. Leads flow into the existing review queue with
-`origin: "receptionist"`.
+flags, and errors. `unread`/`leads`/`lead` read the `regulus-inbound-leads`
+review queue directly (with `origin` + `notification_status`). Leads flow into
+the existing review queue with `origin: "receptionist"`.
+
+**Retention:** terminal conversations older than the chosen window are moved to
+an `archived/` prefix by `archive --before-days N` (recommended: 90 days,
+monthly). Archival preserves the record and clears per-turn idempotency markers,
+keeping the hot `conversations/` prefix bounded.
 
 ---
 
