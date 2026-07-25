@@ -39,8 +39,9 @@ function get(key: string): string {
 }
 
 function listKeys(): string[] {
-  const out = netlify(["blobs:list", CONVO_STORE]);
-  return out.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.startsWith("conversations/"));
+  const out = netlify(["blobs:list", CONVO_STORE, "--json"]);
+  const parsed = JSON.parse(out) as { blobs?: { key: string }[] };
+  return (parsed.blobs ?? []).map((b) => b.key).filter((k) => k.startsWith("conversations/"));
 }
 
 function summarize(r: ConversationRecord) {
