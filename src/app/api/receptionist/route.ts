@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { GREETING_MESSAGE, newConversation, processVisitorTurn } from "@/lib/receptionist/conversation";
 import { sanitize, MAX_TURNS } from "@/lib/receptionist/injection";
 import { selectModel } from "@/lib/receptionist/model";
-import { selectCalendar } from "@/lib/receptionist/calendar";
+import { selectAvailability, selectCalendar } from "@/lib/receptionist/calendar";
 import { notifyLead } from "@/lib/receptionist/notify";
 import { getConversation, persistLead, rateLimited, receptionistSalt, recordTurn, saveConversation, seenTurn } from "@/lib/receptionist/store";
 import { isTerminal } from "@/lib/receptionist/schema";
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     }
 
     const model = selectModel();
-    const { record: next, reply, effect } = await processVisitorTurn(record, body.message, model, { now, booking: selectCalendar() });
+    const { record: next, reply, effect } = await processVisitorTurn(record, body.message, model, { now, booking: selectCalendar(), availability: selectAvailability() });
 
     if (effect.kind === "create_lead") {
       const result = await persistLead(effect.leadInput, salt);

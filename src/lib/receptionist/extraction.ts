@@ -6,7 +6,7 @@
  * every proposed value is re-validated here before it is trusted — the model can
  * never write a field the deterministic layer would reject. Unknown stays null.
  */
-import type { ConfidenceByField, QualificationFields } from "@/lib/receptionist/schema";
+import type { ConfidenceByField, OfferedSlot, QualificationFields } from "@/lib/receptionist/schema";
 
 const EMAIL_RE = /[^\s@]+@[^\s@]+\.[^\s@]{2,}/;
 const PHONE_RE = /(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/;
@@ -100,4 +100,38 @@ export function reconcileModelExtraction(
 /** True once we have enough to create a useful, human-reviewable lead. */
 export function hasMinimumViableLead(f: QualificationFields): boolean {
   return Boolean(f.email && (f.business_problem || f.inquiry_type));
+}
+
+/**
+ * Resolve the visitor's EXPLICIT slot selection against the offered options.
+ * Accepts a position ("1"/"2"/"3", "option 2", "#3"), an ordinal ("first",
+ * "second", "third", "last"), or a time token present in exactly one label.
+ * Returns null when the choice is missing OR ambiguous (matches >1) — the flow
+ * then re-prompts rather than guessing.
+ */
+export function extractSlotSelection(text: string, slots: OfferedSlot[]): OfferedSlot | null {
+  if (!slots.length) return null;
+  const t = ` ${text.toLowerCase()} `;
+  const TIME_RE = /\b\d{1,2}(:\d{2})?\s*(am|pm)\b/g;
+
+  // 1. An explicit clock time (with am/pm) is the clearest intent — match it by label.
+  const timeTok = t.match(TIME_RE);
+  if (timeTok) {
+    const hits = new Set<number>();
+    for (const tok of timeTok) {
+      const wanted = tok.replace(/\s+/g, "");
+      slots.forEach((s, i) => { if (s.label.toLowerCase().replace(/\s+/g, "").includes(wanted)) hits.add(i); });
+    }
+    if (hits.size === 1) return slots[[...hits][0]];
+  }
+
+  // 2. Ordinal / position. Strip time tokens first so "2:00pm" isn't read as "option 2".
+  const idxs = new Set<number>();
+  const ordinals: RegExp[] = [/\b(first|1st|option\s*one)\b/, /\b(second|2nd|option\s*two)\b/, /\b(third|3rd|option\s*three)\b/];
+  ordinals.forEach((re, i) => { if (i < slots.length && re.test(t)) idxs.add(i); });
+  if (/\b(last|final)\b/.test(t)) idxs.add(slots.length - 1);
+  const noTime = t.replace(TIME_RE, " ");
+  for (const n of (noTime.match(/\b[1-9]\b/g) || []).map(Number)) if (n >= 1 && n <= slots.length) idxs.add(n - 1);
+
+  return idxs.size === 1 ? slots[[...idxs][0]] : null; // exactly one -> selected; else ambiguous/none
 }

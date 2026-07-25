@@ -72,26 +72,45 @@ test("bookingRequestFromRecord returns null when no durable slot is captured", (
   assert.equal(bookingRequestFromRecord(rec), null); // no slot yet -> no booking
 });
 
-test("integration: durable provider evidence drives the engine to BOOKED", async () => {
+const SLOT = { slot_id: "s1", start: REQ.start, end: REQ.end, timezone: REQ.timezone, label: "Mon, Jul 27, 3:00 PM EDT" };
+const oneSlot = async () => [SLOT];
+
+function qualified() {
   const rec = newConversation("c", "/", null, NOW);
   rec.qualification.email = "prospect@clinic.ca";
   rec.qualification.business_problem = "missed calls after hours";
   rec.qualification.booking_intent = true;
+  return rec;
+}
+
+test("integration: turn 1 offers verified availability (no BOOKED yet)", async () => {
+  const { record } = await processVisitorTurn(qualified(), "Let's book a discovery call.", model, { now: NOW, availability: oneSlot, booking: async () => null });
+  assert.equal(record.state, "READY_TO_BOOK");
+  assert.equal(record.offered_slots.length, 1);
+  assert.notEqual(record.state, "BOOKED");
+});
+
+test("integration: select a slot + durable provider evidence -> BOOKED", async () => {
   const durable = async (): Promise<BookingEvidence> => ({
     event_identifier: "evt_xyz", start: REQ.start, end: REQ.end, timezone: REQ.timezone, attendee_contact: "prospect@clinic.ca", creation_status: "confirmed",
   });
-  const { record, effect } = await processVisitorTurn(rec, "Let's book a discovery call.", model, { now: NOW, booking: durable });
+  const offered = (await processVisitorTurn(qualified(), "Let's book a discovery call.", model, { now: NOW, availability: oneSlot, booking: durable })).record;
+  const { record, effect } = await processVisitorTurn(offered, "option 1 please", model, { now: NOW, availability: oneSlot, booking: durable });
   assert.equal(record.state, "BOOKED");
   assert.ok(record.booking_evidence && isDurableBookingEvidence(record.booking_evidence));
+  assert.equal(record.selected_slot?.slot_id, "s1");
   assert.equal(effect.kind, "create_lead");
 });
 
-test("integration: a null-returning provider never books (fails closed to FOLLOW_UP_REQUIRED)", async () => {
-  const rec = newConversation("c", "/", null, NOW);
-  rec.qualification.email = "prospect@clinic.ca";
-  rec.qualification.business_problem = "missed calls after hours";
-  rec.qualification.booking_intent = true;
-  const { record } = await processVisitorTurn(rec, "Let's book a discovery call.", model, { now: NOW, booking: async () => null });
+test("integration: selection + null provider never books (fails closed to FOLLOW_UP_REQUIRED)", async () => {
+  const offered = (await processVisitorTurn(qualified(), "Let's book a discovery call.", model, { now: NOW, availability: oneSlot, booking: async () => null })).record;
+  const { record } = await processVisitorTurn(offered, "1", model, { now: NOW, availability: oneSlot, booking: async () => null });
   assert.equal(record.state, "FOLLOW_UP_REQUIRED");
   assert.equal(record.booking_evidence, null);
+});
+
+test("integration: no availability -> fails closed to FOLLOW_UP_REQUIRED (never offers)", async () => {
+  const { record } = await processVisitorTurn(qualified(), "Let's book a discovery call.", model, { now: NOW, availability: async () => [], booking: async () => null });
+  assert.equal(record.state, "FOLLOW_UP_REQUIRED");
+  assert.equal(record.offered_slots.length, 0);
 });
