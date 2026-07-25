@@ -18,9 +18,13 @@ test("route enforces origin, salt config, rate limit, and idempotency", async ()
 test("route reuses the existing lead gate and records failures without crashing", async () => {
   const route = await read("../src/app/api/receptionist/route.ts");
   assert.match(route, /persistLead\(effect\.leadInput/);
-  assert.match(route, /notifyMaintainer/);
-  // persistence is authoritative; notification is fire-and-forget
-  assert.match(route, /void notifyMaintainer/);
+  // persistence is authoritative; notification fires only AFTER the durable save
+  const saveIdx = route.indexOf("await saveConversation(next)");
+  const notifyIdx = route.indexOf("notifyLead(next)");
+  assert.ok(saveIdx > 0 && notifyIdx > saveIdx, "notifyLead must run after saveConversation");
+  assert.match(route, /if \(next\.lead_id\) await notifyLead\(next\)/); // only for qualified leads
+  // idempotency marker recorded only after the durable save
+  assert.match(route, /await saveConversation\(next\)[\s\S]*recordTurn\(id, idem, salt\)/);
   // fail-closed error path returns 503, never leaks internals
   assert.match(route, /catch\s*\{[\s\S]*503/);
 });
