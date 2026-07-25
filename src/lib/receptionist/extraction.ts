@@ -34,7 +34,8 @@ export function extractFromVisitorText(
   const confidence: ConfidenceByField = {};
   const t = allVisitorText;
 
-  const email = t.match(EMAIL_RE)?.[0]?.toLowerCase() ?? null;
+  // Strip trailing sentence punctuation so "...@regulus.ca. Yes" yields a clean address.
+  const email = t.match(EMAIL_RE)?.[0]?.toLowerCase().replace(/[.,;:!?)\]}'"]+$/, "") ?? null;
   if (email && !fields.email) { fields.email = email.slice(0, 254); confidence.email = 0.95; }
 
   const phone = t.match(PHONE_RE)?.[0] ?? null;
