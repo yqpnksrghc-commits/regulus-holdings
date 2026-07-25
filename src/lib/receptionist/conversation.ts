@@ -15,9 +15,11 @@
  */
 import type { LeadInput } from "@/lib/leads";
 import { detectInjection, detectSpam, redactSecrets, sanitize } from "@/lib/receptionist/injection";
-import { extractFromVisitorText, hasMinimumViableLead, reconcileModelExtraction } from "@/lib/receptionist/extraction";
+import { extractFromVisitorText, extractSlotSelection, hasMinimumViableLead, reconcileModelExtraction } from "@/lib/receptionist/extraction";
 import { AI_DISCLOSURE } from "@/lib/receptionist/knowledge";
 import type { ReceptionistModel } from "@/lib/receptionist/model/adapter";
+import type { AvailabilityProvider } from "@/lib/receptionist/calendar/adapter";
+import { slotsAreFresh } from "@/lib/receptionist/calendar/availability";
 import { transition } from "@/lib/receptionist/state-machine";
 import {
   emptyQualification,
@@ -26,8 +28,17 @@ import {
   type BookingEvidence,
   type ConversationRecord,
   type ConversationState,
+  type OfferedSlot,
   type QualificationFields,
 } from "@/lib/receptionist/schema";
+
+/** Numbered list of offered slots for a receptionist reply. */
+function slotList(slots: OfferedSlot[]): string {
+  return slots.map((s, i) => `${i + 1}) ${s.label}`).join("\n");
+}
+
+/** Availability that returns no slots — the default when no calendar is configured. */
+const noAvailability: AvailabilityProvider = async () => [];
 
 export const GREETING_MESSAGE =
   `Hi — welcome to Regulus Automation. ${AI_DISCLOSURE} What brings you here today?`;
@@ -55,6 +66,10 @@ export function newConversation(id: string, sourcePage: string | null, campaign:
     lead_id: null,
     lead_pipeline_state: null,
     booking_evidence: null,
+    offered_slots: [],
+    offered_at: null,
+    selected_slot: null,
+    booked_at: null,
     follow_up_required: false,
     human_takeover: false,
     duplicate_of: null,
@@ -121,10 +136,11 @@ export async function processVisitorTurn(
   prior: ConversationRecord,
   rawMessage: unknown,
   model: ReceptionistModel,
-  opts: { now?: Date; booking?: BookingProvider } = {},
+  opts: { now?: Date; booking?: BookingProvider; availability?: AvailabilityProvider } = {},
 ): Promise<{ record: ConversationRecord; reply: string; effect: TurnEffect }> {
   const now = opts.now ?? new Date();
   const booking = opts.booking ?? noCalendarProvider;
+  const availability = opts.availability ?? noAvailability;
   const record: ConversationRecord = structuredClone(prior);
 
   if (isTerminal(record.state)) {
@@ -169,8 +185,7 @@ export async function processVisitorTurn(
   record.qualification = rec.fields;
   record.confidence_by_field = mergeConfidence(record.confidence_by_field, rec.confidence);
 
-  const reply = redactSecrets(proposal.reply).slice(0, 2000);
-  record.transcript.push({ role: "receptionist", text: reply, at: now.toISOString() });
+  let reply = redactSecrets(proposal.reply).slice(0, 2000);
   record.updated_at = now.toISOString();
 
   const q = record.qualification;
@@ -185,19 +200,58 @@ export async function processVisitorTurn(
     if (q.email) effect = { kind: "create_lead", reason: "human_requested", leadInput: toLeadInput(record, now.getTime()) };
   } else if (action === "mark_out_of_scope") {
     applyState(record, "OUT_OF_SCOPE");
-  } else if (action === "offer_booking" || (q.booking_intent && hasMinimumViableLead(q))) {
-    applyState(record, activeNext(record.state, q));
-    applyState(record, "READY_TO_BOOK");
-    const evidence = await booking(record);
-    if (isDurableBookingEvidence(evidence)) {
-      record.booking_evidence = evidence;
-      applyState(record, "BOOKED");
-      if (q.email) effect = { kind: "create_lead", reason: "qualified", leadInput: toLeadInput(record, now.getTime()) };
+  } else if (action === "offer_booking" || record.offered_slots.length > 0 || (q.booking_intent && hasMinimumViableLead(q))) {
+    // Two-step booking: offer VERIFIED availability, capture an EXPLICIT selection,
+    // then book. The engine controls every booking reply so the model can never
+    // claim availability or a BOOKED it cannot prove. A qualified visitor's lead
+    // is preserved regardless of booking outcome.
+    const leadReady = hasMinimumViableLead(q) && Boolean(q.email);
+    const awaitingSelection = record.offered_slots.length > 0 && slotsAreFresh(record.offered_at, now);
+
+    if (awaitingSelection) {
+      const sel = extractSlotSelection(clean, record.offered_slots);
+      if (!sel) {
+        // Missing or ambiguous choice -> re-prompt with the same verified options.
+        applyState(record, "READY_TO_BOOK");
+        reply = `Just to confirm — which time works? Reply with the number:\n${slotList(record.offered_slots)}`;
+        if (leadReady) effect = { kind: "create_lead", reason: "follow_up", leadInput: toLeadInput(record, now.getTime()) };
+      } else {
+        record.selected_slot = sel;
+        const evidence = await booking(record); // provider-confirmed durable evidence, or null
+        if (isDurableBookingEvidence(evidence)) {
+          record.booking_evidence = evidence;
+          record.booked_at = now.toISOString();
+          applyState(record, "BOOKED");
+          reply = `You're booked for ${sel.label}. A calendar invite is on its way to ${q.email}. Talk soon — a Regulus team member will be there.`;
+          if (q.email) effect = { kind: "create_lead", reason: "qualified", leadInput: toLeadInput(record, now.getTime()) };
+        } else {
+          // Provider could not confirm -> never BOOKED; preserve the lead + escalate.
+          record.follow_up_required = true;
+          applyState(record, "FOLLOW_UP_REQUIRED");
+          reply = `I couldn't lock that time in just now, so a Regulus team member will email ${q.email} to confirm it. Sorry for the hiccup.`;
+          if (q.email) effect = { kind: "create_lead", reason: "follow_up", leadInput: toLeadInput(record, now.getTime()) };
+        }
+      }
     } else {
-      // Booking has no durable calendar evidence -> FOLLOW_UP_REQUIRED, never BOOKED.
-      record.follow_up_required = true;
-      applyState(record, "FOLLOW_UP_REQUIRED");
-      if (q.email) effect = { kind: "create_lead", reason: "follow_up", leadInput: toLeadInput(record, now.getTime()) };
+      // First booking turn (or expired slots) -> query VERIFIED availability.
+      applyState(record, activeNext(record.state, q));
+      const slots = await availability(now); // [] = none, null = provider error
+      if (slots && slots.length > 0) {
+        record.offered_slots = slots;
+        record.offered_at = now.toISOString();
+        record.selected_slot = null;
+        applyState(record, "READY_TO_BOOK");
+        reply = `Happy to set up a discovery call. Here are the next available times (${slots[0].timezone}):\n${slotList(slots)}\nReply with the number that works.`;
+        if (leadReady) effect = { kind: "create_lead", reason: "follow_up", leadInput: toLeadInput(record, now.getTime()) };
+      } else {
+        // No availability OR provider error -> fail closed to human follow-up.
+        record.offered_slots = [];
+        record.offered_at = null;
+        record.follow_up_required = true;
+        applyState(record, "FOLLOW_UP_REQUIRED");
+        reply = `I'd love to get you booked — I couldn't pull live times right now, so a Regulus team member will email ${q.email || "you"} to lock in a time.`;
+        if (leadReady) effect = { kind: "create_lead", reason: "follow_up", leadInput: toLeadInput(record, now.getTime()) };
+      }
     }
   } else if (action === "create_lead" || (hasMinimumViableLead(q) && q.email)) {
     if (q.email) {
@@ -210,6 +264,9 @@ export async function processVisitorTurn(
   } else {
     applyState(record, activeNext(record.state, q));
   }
+
+  // Record the (possibly engine-overridden) receptionist reply once the turn is decided.
+  record.transcript.push({ role: "receptionist", text: reply, at: now.toISOString() });
 
   return { record, reply, effect };
 }

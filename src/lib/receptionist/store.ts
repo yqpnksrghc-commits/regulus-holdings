@@ -13,7 +13,7 @@
  */
 import { getStore } from "@netlify/blobs";
 import { createLeadRecord, opaqueLeadKey, validateLead, type LeadInput } from "@/lib/leads";
-import { isTerminal, type ConversationRecord } from "@/lib/receptionist/schema";
+import { isTerminal, type BookingEvidence, type ConversationRecord } from "@/lib/receptionist/schema";
 
 const CONVO_STORE = "regulus-receptionist-conversations";
 const LEAD_STORE = "regulus-inbound-leads";
@@ -113,6 +113,25 @@ export async function persistLead(input: LeadInput, salt: string): Promise<LeadP
     return { lead_id: record.lead_id, pipeline_state: record.pipeline_state, duplicate: false };
   } catch {
     return { error: "lead_store_unavailable" };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Booking idempotency. A confirmed booking is stored once per conversation so a
+// retry (or a concurrent request) can never create a second calendar event.
+// ---------------------------------------------------------------------------
+
+export async function getStoredBooking(conversationId: string): Promise<BookingEvidence | null> {
+  return (await convoStore().get(`bookings/${conversationId}`, { type: "json" }).catch(() => null)) as BookingEvidence | null;
+}
+
+/** Claim the booking slot for a conversation. Returns true only for the first writer. */
+export async function putStoredBookingIfNew(conversationId: string, evidence: BookingEvidence): Promise<boolean> {
+  try {
+    const res = await convoStore().setJSON(`bookings/${conversationId}`, evidence, { onlyIfNew: true });
+    return res.modified;
+  } catch {
+    return false;
   }
 }
 

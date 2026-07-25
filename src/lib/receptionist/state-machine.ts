@@ -41,7 +41,7 @@ const TRANSITIONS: Record<State, readonly State[]> = {
 export { CONVERSATION_STATES, isTerminal };
 
 export function canTransition(from: State, to: State): boolean {
-  if (from === to && (from === "QUALIFYING" || from === "CONTACT_CAPTURE")) return true;
+  if (from === to && (from === "QUALIFYING" || from === "CONTACT_CAPTURE" || from === "READY_TO_BOOK")) return true;
   if (ALWAYS_REACHABLE.includes(to) && !isTerminal(from)) return true;
   return TRANSITIONS[from]?.includes(to) ?? false;
 }

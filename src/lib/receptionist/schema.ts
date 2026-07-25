@@ -117,6 +117,14 @@ export type ConversationRecord = {
   lead_pipeline_state: string | null;
   /** Booking gate — only ever populated from durable calendar evidence. */
   booking_evidence: BookingEvidence | null;
+  /** Verified availability offered to the visitor (never invented by the model). */
+  offered_slots: OfferedSlot[];
+  /** When the current `offered_slots` were produced (ISO) — used for expiry. */
+  offered_at: string | null;
+  /** The single slot the visitor explicitly selected, or null. */
+  selected_slot: OfferedSlot | null;
+  /** When a durable booking was recorded (ISO), or null. */
+  booked_at: string | null;
   follow_up_required: boolean;
   human_takeover: boolean;
   duplicate_of: string | null;
@@ -127,6 +135,15 @@ export type ConversationRecord = {
   source_page: string | null;
   campaign_parameters: string | null;
   extraction_source: "deterministic" | "model+deterministic";
+};
+
+/** A verified, offerable discovery-call time. `slot_id` is a stable hash of start|end. */
+export type OfferedSlot = {
+  slot_id: string;
+  start: string; // ISO 8601
+  end: string; // ISO 8601
+  timezone: string; // IANA tz
+  label: string; // human-readable, rendered in `timezone`
 };
 
 /** Durable calendar evidence. Without ALL of these a booking is NOT complete. */

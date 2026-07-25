@@ -78,8 +78,17 @@ Escalation / terminal (reachable from any active state): `HUMAN_REQUESTED`,
 transition is refused and recorded as an audit flag rather than applied.
 
 `BOOKED` is reachable **only** from `READY_TO_BOOK` and **only** with durable
-calendar evidence. Phase 1 has no calendar, so bookings resolve to
-`FOLLOW_UP_REQUIRED`.
+provider evidence. Booking is two-step and engine-controlled (the model never
+claims availability or a booking): once a visitor is qualified and wants to book,
+the engine (1) queries **verified** availability and offers 2–3 real slots
+(`offered_slots`), (2) captures an **explicit** selection (`selected_slot`), then
+(3) requests the booking. A confirmed event → `BOOKED` (evidence + `booked_at`
+persisted). No/ambiguous selection re-prompts; no availability, a provider error,
+or unconfirmed booking → `FOLLOW_UP_REQUIRED` (lead preserved, maintainer
+notified). With no calendar configured there are no slots, so booking always
+falls back to `FOLLOW_UP_REQUIRED`. Booking is idempotent per conversation
+(`bookings/<id>` claimed with `onlyIfNew` + a deterministic provider event id),
+so retries and concurrent requests can never create a second event.
 
 ---
 
@@ -102,9 +111,16 @@ or deterministic system facts; anything else defers to a human. See
      `RECEPTIONIST_NOTIFICATION_WEBHOOK_URL` (+ `_TOKEN`), or reuse `LEAD_NOTIFICATION_WEBHOOK_URL`/`_TOKEN`.
      Fires once per qualified lead, after durable save; idempotent, retried (3×), and
      delivery status is logged to the lead (`notification_status`) + a `notifications/<lead_id>` marker.
-   - **Calendar (optional — enables real booked calls):** `GOOGLE_CALENDAR_ENABLED=true`,
-     `GOOGLE_CALENDAR_ID`, `GOOGLE_CALENDAR_ACCESS_TOKEN`. Off by default → bookings
-     resolve to `FOLLOW_UP_REQUIRED`; the engine never reports `BOOKED` without provider confirmation.
+   - **Calendar (optional — enables real availability + booked calls):**
+     `GOOGLE_CALENDAR_ENABLED=true`, `GOOGLE_CALENDAR_ID`, `GOOGLE_CALENDAR_ACCESS_TOKEN`
+     (a live OAuth/service-account access token with Calendar scope). Off by default →
+     no slots → bookings resolve to `FOLLOW_UP_REQUIRED`; the engine never reports
+     `BOOKED` without provider confirmation.
+   - **Availability tuning (optional, sensible defaults):** `CALENDAR_TIMEZONE`
+     (`America/Toronto`), `CALENDAR_BUSINESS_START_HOUR` (9), `CALENDAR_BUSINESS_END_HOUR`
+     (17), `CALENDAR_SLOT_MINUTES` (30), `CALENDAR_BUFFER_MINUTES` (15),
+     `CALENDAR_HORIZON_DAYS` (10), `CALENDAR_LEAD_MINUTES` (120),
+     `CALENDAR_SLOTS_TO_OFFER` (3), `CALENDAR_WORKDAYS` (`1,2,3,4,5`).
 2. **Blobs:** no setup — `@netlify/blobs` auto-provisions the named stores on Netlify.
 3. **Deploy:** the site's normal Netlify build. New route: `ƒ /api/receptionist`.
 4. **Verify:** load any page → "Ask Regulus" launcher → greeting appears; submit a
