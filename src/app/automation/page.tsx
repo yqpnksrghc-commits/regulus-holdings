@@ -31,13 +31,13 @@ export default function AutomationPage() {
           ))}
         </div>
         <div className="mt-12 rounded-3xl border border-gold/30 bg-panel p-8 text-center">
-          <h2 className="text-h2">Start with a Free Automation Audit request.</h2>
+          <h2 className="text-h2">Start with a Free Automation Opportunity Assessment.</h2>
           <p className="mx-auto mt-3 max-w-2xl text-ink-soft">
             Tell us where an inquiry can stall. We will review the fit and, if useful, propose a
             scoped CAD $500 paid audit before any implementation.
           </p>
           <Button href="/contact?intent=free-automation-audit" size="lg" className="mt-6" data-analytics-event="audit_inquiry">
-            Request a Free Automation Audit
+            Request a Free Assessment
           </Button>
         </div>
       </Section>

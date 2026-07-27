@@ -5,6 +5,9 @@ const root=path.resolve(".next/server/app"),canonicalOrigin="https://regulusauto
 if(!fs.existsSync(root)) throw new Error("Production build missing. Run npm run build first.");
 const files=[];const walk=d=>fs.readdirSync(d,{withFileTypes:true}).forEach(e=>{const p=path.join(d,e.name);e.isDirectory()?walk(p):e.name.endsWith(".html")&&files.push(p)});walk(root);
 const routes=new Map(),errors=[],titles=new Map();
+// Intentional-noindex allowlist: routes that MUST remain noindex in production (fail if they become indexable).
+// /ai-receptionist-demo — fictional tenant, simulated data, sales-demo surface; intentionally excluded from search indexing.
+const INTENTIONAL_NOINDEX=new Set(["/ai-receptionist-demo"]);
 const value=(html,re)=>(html.match(re)||[])[1];
 for(const file of files){
   let route="/"+path.relative(root,file).replaceAll("\\","/").replace(/index\.html$/,"").replace(/\.html$/,"").replace(/\/$/,"");
@@ -14,7 +17,9 @@ for(const file of files){
   if(!title)errors.push(`${route}: missing title`);else{if(titles.has(title))errors.push(`${route}: duplicate title with ${titles.get(title)}`);titles.set(title,route)}
   if(!description)errors.push(`${route}: missing description`);
   if(!canonical||!canonical.startsWith(canonicalOrigin)||canonical.endsWith("/")&&canonical!==canonicalOrigin)errors.push(`${route}: malformed canonical ${canonical||"missing"}`);
-  if(/noindex/i.test(robots))errors.push(`${route}: accidental production noindex`);
+  const isNoindex=/noindex/i.test(robots);
+  if(INTENTIONAL_NOINDEX.has(route)){if(!isNoindex)errors.push(`${route}: intentional-noindex route must remain noindex (fictional tenant, simulated data, sales-demo surface — intentionally excluded from search indexing)`);}
+  else if(isNoindex)errors.push(`${route}: accidental production noindex`);
   if((html.match(/<h1[\s>]/gi)||[]).length!==1)errors.push(`${route}: expected exactly one h1`);
   for(const match of html.matchAll(/<script type="application\/ld\+json">([^<]+)<\/script>/gi)){try{JSON.parse(match[1])}catch{errors.push(`${route}: invalid JSON-LD`)}}
   if(/PLACEHOLDER_TEXT|lorem ipsum/i.test(html))errors.push(`${route}: unsupported placeholder text`);

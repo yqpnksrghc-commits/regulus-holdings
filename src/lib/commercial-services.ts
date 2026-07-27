@@ -1,11 +1,19 @@
 export const commercialServices = [
   {
     slug: "automation-opportunity-audit",
-    name: "Automation Opportunity Audit",
-    description: "An evidence-first review of where repetitive work, delayed response, fragmented information, and avoidable operational loss may be occurring.",
+    name: "Free Automation Opportunity Assessment",
+    description: "A no-cost initial review of publicly observable workflow friction and the context you choose to share.",
     problem: "Organizations often feel the cost of manual work before they can locate, measure, or prioritize it.",
-    outcome: "A documented opportunity map that separates observations, assumptions, unknowns, and practical next steps. Diagnosis is separate from implementation.",
+    outcome: "A brief opportunity map separating observations, assumptions, unknowns, and practical next steps. It is not the paid Value Leakage Audit or an implementation engagement.",
     measures: ["observable workflow delays", "repetitive handoffs and re-entry", "missing ownership or follow-up states"],
+  },
+  {
+    slug: "value-leakage-audit",
+    name: "Value Leakage Audit (CAD $500, prepaid)",
+    description: "A paid engagement examining your client-approved inquiry and booking process and supplied evidence, with an editable findings report. The free Assessment is an initial fit review; this is the scoped diagnosis.",
+    problem: "When intake and follow-up span phone, forms, and separate tools, value can become difficult to see or measure.",
+    outcome: "An editable report with grounded observations, separately labelled assumptions, low/expected/high recoverable-value scenarios, confidence levels, and a prioritized intervention recommendation. Excludes implementation and any guaranteed performance or revenue claims. Fee CAD $500, paid in advance.",
+    measures: ["intake paths mapped", "hand-off points identified", "prioritized recoverable-value scenarios"],
   },
   {
     slug: "business-process-automation",
