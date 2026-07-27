@@ -11,7 +11,7 @@ import type { ConfidenceByField, OfferedSlot, QualificationFields } from "@/lib/
 const EMAIL_RE = /[^\s@]+@[^\s@]+\.[^\s@]{2,}/;
 const PHONE_RE = /(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/;
 
-const HUMAN_RE = /\b(?:talk|speak|connect|chat)\s+(?:to|with)\s+(?:a\s+)?(?:human|person|someone|real person|representative|agent|staff|team)\b|\breal\s+person\b|\bhuman\s+(?:please|now)\b/i;
+const HUMAN_RE = /\b(?:talk|speak|connect|chat)\s+(?:to|with)\s+(?:a\s+)?(?:human|person|someone|real person|representative|agent|staff|team)\b|\b(?:need|want)\s+(?:a\s+)?human\b|\breal\s+person\b|\bhuman\s+(?:please|now)\b/i;
 const BOOKING_RE = /\b(?:book|schedule|set up|arrange|get on)\b.{0,20}\b(?:call|meeting|consult|discovery|demo|time|appointment)\b|\b(?:discovery|consultation)\s+call\b|\blet'?s\s+(?:talk|meet)\b/i;
 const CONSENT_YES_RE = /\b(?:yes|sure|ok(?:ay)?|please do|go ahead|sounds good|that works|you can|feel free)\b/i;
 const CONSENT_NO_RE = /\b(?:no|don'?t|do not|stop|not interested|unsubscribe|leave me)\b/i;
@@ -31,6 +31,10 @@ export function extractFromVisitorText(
   prior: QualificationFields,
 ): { fields: QualificationFields; confidence: ConfidenceByField } {
   const fields: QualificationFields = { ...prior };
+  fields.pain_points = [...(prior.pain_points ?? [])];
+  fields.goals = [...(prior.goals ?? [])];
+  fields.requested_services = [...(prior.requested_services ?? [])];
+  fields.questions_answered = [...(prior.questions_answered ?? [])];
   const confidence: ConfidenceByField = {};
   const t = allVisitorText;
 
@@ -52,6 +56,23 @@ export function extractFromVisitorText(
 
   if (AUTHORITY_YES_RE.test(t)) { fields.decision_authority = "yes"; confidence.decision_authority = 0.6; }
   else if (AUTHORITY_NO_RE.test(t)) { fields.decision_authority = "no"; confidence.decision_authority = 0.6; }
+
+  if (!fields.industry) {
+    const industry = t.match(/\b(dental|medical|med spa|clinic|law|legal|accounting|professional services?|home services?)\b/i)?.[0];
+    if (industry) { fields.industry = industry.toLowerCase(); confidence.industry = 0.75; }
+  }
+  if (!fields.business_size) {
+    const size = t.match(/\b(?:team of|we have|with)\s+(\d{1,5})\s+(?:people|employees|staff|locations?)\b/i)?.[0];
+    if (size) { fields.business_size = size; confidence.business_size = 0.7; }
+  }
+  if (!fields.business_problem && /\b(?:miss(?:ed|ing)?|lose|lost|slow|manual|after hours|bottleneck|delay|repetitive|follow-?up|fragmented|scattered|no[- ]show|problem|issue|struggl|need to improve|want to improve)\b/i.test(t)) {
+    fields.business_problem = t.slice(0, 1000);
+    fields.pain_points = [t.slice(0, 300)];
+    confidence.business_problem = 0.75;
+  }
+  if (/\b(short|brief|concise|quick answer)\b/i.test(t)) fields.preferred_communication_style = "concise";
+  else if (/\b(detailed|detail|explain fully)\b/i.test(t)) fields.preferred_communication_style = "detailed";
+  else if (/\b(technical|architecture|api|developer)\b/i.test(t)) fields.preferred_communication_style = "technical";
 
   // Consent is only affirmative on an explicit yes AND no explicit refusal.
   if (CONSENT_NO_RE.test(t)) { fields.consent_to_follow_up = false; confidence.consent_to_follow_up = 0.9; }
@@ -76,7 +97,7 @@ export function reconcileModelExtraction(
   const str = (v: unknown, n: number) => (typeof v === "string" && v.trim() ? v.trim().replace(/<[^>]*>/g, "").slice(0, n) : null);
 
   // Free-text descriptive fields: accept model text (bounded) when absent.
-  for (const key of ["company_name", "inquiry_type", "business_problem", "current_process", "desired_outcome", "approximate_monthly_lead_volume", "approximate_staff_time_lost", "budget_signal", "visitor_name"] as const) {
+  for (const key of ["company_name", "business_type", "industry", "business_size", "inquiry_type", "business_problem", "current_process", "desired_outcome", "approximate_monthly_lead_volume", "approximate_staff_time_lost", "budget_signal", "visitor_name"] as const) {
     if (fields[key] == null) {
       const v = str(proposed[key], key === "business_problem" || key === "current_process" || key === "desired_outcome" ? 1000 : 160);
       if (v) { (fields[key] as string | null) = v; confidence[key] = 0.5; }
@@ -90,6 +111,10 @@ export function reconcileModelExtraction(
   // Enumerated fields: only accept the exact allowed literals.
   if (fields.urgency == null && (proposed.urgency === "low" || proposed.urgency === "medium" || proposed.urgency === "high")) { fields.urgency = proposed.urgency; confidence.urgency = 0.5; }
   if (fields.preferred_contact_method == null && (proposed.preferred_contact_method === "email" || proposed.preferred_contact_method === "phone")) { fields.preferred_contact_method = proposed.preferred_contact_method; confidence.preferred_contact_method = 0.5; }
+  if (fields.preferred_communication_style == null && (proposed.preferred_communication_style === "concise" || proposed.preferred_communication_style === "detailed" || proposed.preferred_communication_style === "technical")) {
+    fields.preferred_communication_style = proposed.preferred_communication_style;
+    confidence.preferred_communication_style = 0.5;
+  }
   // Booleans/authority the model may only *raise*, never silently clear a human/consent decision.
   if (proposed.booking_intent === true) { fields.booking_intent = true; confidence.booking_intent = 0.5; }
   if (proposed.human_requested === true) { fields.human_requested = true; confidence.human_requested = 0.6; }

@@ -16,7 +16,15 @@
 import type { LeadInput } from "@/lib/leads";
 import { detectInjection, detectSpam, redactSecrets, sanitize } from "@/lib/receptionist/injection";
 import { extractFromVisitorText, extractSlotSelection, hasMinimumViableLead, reconcileModelExtraction } from "@/lib/receptionist/extraction";
-import { AI_DISCLOSURE } from "@/lib/receptionist/knowledge";
+import { AI_DISCLOSURE, PRIVACY_NOTE } from "@/lib/receptionist/knowledge";
+import { classifyIntent } from "@/lib/receptionist/intent";
+import { retrieveKnowledge } from "@/lib/receptionist/retrieval";
+import { rememberAnsweredQuestion } from "@/lib/receptionist/conversation-memory";
+import { draftConsultativeResponse } from "@/lib/receptionist/response";
+import { evaluateQuality, evaluateSales, validateEvidence } from "@/lib/receptionist/evaluation";
+import { evaluateConversationProgress } from "@/lib/receptionist/evaluation";
+import { selectConversationGoal } from "@/lib/receptionist/goal";
+import { createResponsePlan } from "@/lib/receptionist/response-plan";
 import type { ReceptionistModel } from "@/lib/receptionist/model/adapter";
 import type { AvailabilityProvider } from "@/lib/receptionist/calendar/adapter";
 import { slotsAreFresh } from "@/lib/receptionist/calendar/availability";
@@ -87,11 +95,6 @@ function mergeConfidence(a: ConversationRecord["confidence_by_field"], b: Conver
   const out = { ...a };
   for (const [k, v] of Object.entries(b)) if (typeof v === "number") out[k as keyof typeof out] = v;
   return out;
-}
-
-/** Concatenate all visitor text for the deterministic extractor. */
-function allVisitorText(record: ConversationRecord): string {
-  return record.transcript.filter((t) => t.role === "visitor").map((t) => t.text).join("\n");
 }
 
 function toLeadInput(record: ConversationRecord, now: number): LeadInput {
@@ -165,10 +168,44 @@ export async function processVisitorTurn(
     return { record, reply: "Thanks for reaching out. If this is a genuine business inquiry, please email info@regulusautomation.ca.", effect: { kind: "none" } };
   }
 
-  // 2. Model proposes (deterministic adapter by default; production via config).
+  // 2. Conversation state -> intent -> narrowly scoped approved knowledge.
+  // Extract from the current turn and merge into durable prior fields. Replaying
+  // the full transcript would let an unrelated old "yes" or "no" rewrite the
+  // visitor's current consent signal.
+  const pre = extractFromVisitorText(clean, record.qualification);
+  record.qualification = pre.fields;
+  record.confidence_by_field = mergeConfidence(record.confidence_by_field, pre.confidence);
+  const classification = classifyIntent(clean);
+  const retrieval = retrieveKnowledge(classification);
+  const sensitiveInput = /\b(password|credit card|card number|sin|social insurance|ssn)\b/i.test(clean);
+  if (sensitiveInput && !retrieval.facts.some((f) => f.id === "privacy.note")) {
+    retrieval.facts.unshift({ id: "privacy.note", text: PRIVACY_NOTE, source: "src/lib/receptionist/knowledge.ts" });
+  }
+  const previousReceptionistReplies = record.transcript
+    .filter((turn) => turn.role === "receptionist")
+    .map((turn) => turn.text);
+  const goal = selectConversationGoal({
+    state: record.state,
+    message: clean,
+    classification,
+    qualification: record.qualification,
+    visitorFlags,
+  });
+  const plan = createResponsePlan(goal, classification, retrieval, record.qualification, previousReceptionistReplies);
+
+  // 3. Model drafts from the retrieved knowledge only.
   let proposal;
   try {
-    proposal = await model.respond({ transcript: record.transcript, qualification: record.qualification, sourcePage: record.source_page, visitorFlags });
+    proposal = await model.respond({
+      transcript: record.transcript,
+      qualification: record.qualification,
+      sourcePage: record.source_page,
+      visitorFlags,
+      classification,
+      retrieval,
+      goal,
+      plan,
+    });
     record.extraction_source = model.name === "deterministic" ? "deterministic" : "model+deterministic";
   } catch {
     applyState(record, "ERROR_RECOVERABLE");
@@ -177,30 +214,88 @@ export async function processVisitorTurn(
     return { record, reply: "I'm having a brief technical issue. Please try again, or email info@regulusautomation.ca and the team will help.", effect: { kind: "none" } };
   }
 
-  // 3. Deterministic extraction is authoritative; model proposal is reconciled.
-  const det = extractFromVisitorText(allVisitorText(record), record.qualification);
-  record.qualification = det.fields;
-  record.confidence_by_field = mergeConfidence(record.confidence_by_field, det.confidence);
+  // 4. Deterministic extraction is authoritative; model proposal is reconciled.
   const rec = reconcileModelExtraction(record.qualification, proposal.proposedExtraction);
   record.qualification = rec.fields;
   record.confidence_by_field = mergeConfidence(record.confidence_by_field, rec.confidence);
+  record.qualification = rememberAnsweredQuestion(record.qualification, classification);
 
+  // 5/6/7. Quality, sales, and evidence evaluation. Any weak proposal is
+  // regenerated from deterministic approved fragments, then scored again.
+  const canonical = draftConsultativeResponse(classification, retrieval, record.qualification, plan);
+  if (sensitiveInput) {
+    canonical.reply = `${PRIVACY_NOTE}\n\n${canonical.reply}`;
+    canonical.directAnswer = PRIVACY_NOTE;
+    if (!canonical.evidenceIds.includes("privacy.note")) canonical.evidenceIds.unshift("privacy.note");
+  }
   let reply = redactSecrets(proposal.reply).slice(0, 2000);
+  let evidenceIds = proposal.evidenceIds ?? [];
+  let quality = evaluateQuality(reply, canonical.directAnswer);
+  let sales = evaluateSales(reply);
+  let evidence = validateEvidence(reply, evidenceIds, retrieval.facts, canonical.reply);
+  let progress = evaluateConversationProgress(reply, goal, plan, previousReceptionistReplies);
+  let regenerated = false;
+  if (!quality.passed || !sales.passed || !evidence.passed || !progress.passed) {
+    reply = canonical.reply;
+    evidenceIds = canonical.evidenceIds;
+    quality = evaluateQuality(reply, canonical.directAnswer);
+    sales = evaluateSales(reply);
+    evidence = validateEvidence(reply, evidenceIds, retrieval.facts, canonical.reply);
+    progress = evaluateConversationProgress(reply, goal, plan, previousReceptionistReplies);
+    regenerated = true;
+  }
+  record.response_intelligence = {
+    intent: classification.intent,
+    confidence: classification.confidence,
+    secondary_intents: classification.secondary_intents,
+    knowledge_ids: evidenceIds,
+    quality_score: quality.score,
+    sales_score: sales.score,
+    evidence_score: evidence.score,
+    progress_score: progress.score,
+    regenerated,
+    selected_goal: goal.selected_goal,
+    goal_reason: goal.reason,
+    goal_confidence: goal.confidence,
+    blocked_goals: goal.blocked_goals,
+    required_known_fields: goal.required_known_fields,
+    expected_state_change: goal.expected_state_change,
+    response_plan: plan,
+  };
+  if (!quality.passed || !sales.passed || !evidence.passed || !progress.passed) {
+    applyState(record, "ERROR_RECOVERABLE");
+    record.error = "response_evaluation_failed";
+    record.updated_at = now.toISOString();
+    return {
+      record,
+      reply: "Regulus begins by examining the workflow and the evidence available. What business process would you like to improve?",
+      effect: { kind: "none" },
+    };
+  }
   record.updated_at = now.toISOString();
 
   const q = record.qualification;
-  const action = proposal.proposedAction?.kind ?? "none";
+  // The deterministic plan is authoritative when it selects an action. When it
+  // selects none, preserve the existing validated model-proposal path (notably
+  // mark_out_of_scope and create_lead); the downstream gates still decide.
+  const action = plan.proposed_action !== "none"
+    ? plan.proposed_action
+    : (proposal.proposedAction?.kind ?? "none");
   let effect: TurnEffect = { kind: "none" };
 
-  // 4/5/6. Policy → decided effect → validated transition.
+  // 8. Policy → decided effect → validated transition.
   if (q.human_requested || action === "request_human") {
     record.human_takeover = true;
     record.follow_up_required = true;
-    applyState(record, "HUMAN_REQUESTED");
-    if (q.email) effect = { kind: "create_lead", reason: "human_requested", leadInput: toLeadInput(record, now.getTime()) };
+    if (q.email) {
+      applyState(record, "HUMAN_REQUESTED");
+      effect = { kind: "create_lead", reason: "human_requested", leadInput: toLeadInput(record, now.getTime()) };
+    } else {
+      applyState(record, "CONTACT_CAPTURE");
+    }
   } else if (action === "mark_out_of_scope") {
     applyState(record, "OUT_OF_SCOPE");
-  } else if (action === "offer_booking" || record.offered_slots.length > 0 || (q.booking_intent && hasMinimumViableLead(q))) {
+  } else if (action === "offer_booking" || record.offered_slots.length > 0) {
     // Two-step booking: offer VERIFIED availability, capture an EXPLICIT selection,
     // then book. The engine controls every booking reply so the model can never
     // claim availability or a BOOKED it cannot prove. A qualified visitor's lead

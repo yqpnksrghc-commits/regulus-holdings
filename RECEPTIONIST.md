@@ -1,4 +1,4 @@
-# Regulus AI Receptionist — v0.1 (Website Channel)
+# Regulus AI Receptionist — Response Intelligence v2.0 (Website Channel)
 
 A production-ready inbound receptionist that greets website visitors, answers
 grounded questions, qualifies prospects, offers a discovery call, and **never
@@ -18,12 +18,18 @@ route.ts  ── origin check · salt gate · rate limit · idempotency ──�
   ▼                                                                │
 conversation.ts  processVisitorTurn()  (PURE reducer)             │
   1 sanitize + guard        injection.ts                          │
-  2 model.respond()         model/ (deterministic default | anthropic)
-  3 extraction (authoritative) + reconcile model proposal  extraction.ts
-  4 policy gates            knowledge.ts · schema.ts
-  5 action PROPOSAL → decided effect
-  6 validated transition    state-machine.ts
-  7 reply
+  2 structured memory       extraction.ts · conversation-memory.ts
+  3 intent classification   intent.ts
+  4 narrow retrieval        retrieval.ts · knowledge.ts
+  5 conversation goal       goal.ts
+  6 response plan           response-plan.ts
+  7 draft response          model/ · response.ts
+  8 quality evaluation      evaluation.ts
+  9 sales evaluation        evaluation.ts
+ 10 evidence validation     evaluation.ts
+ 11 progress evaluation     evaluation.ts
+ 12 policy/action gates     state-machine.ts · calendar/
+ 13 final reply + scores
   ▼
 store.ts  Netlify Blobs (strong consistency)
   • regulus-receptionist-conversations   (transcript + state)
@@ -46,6 +52,17 @@ existing review/promotion gate is intact; receptionist leads carry
 
 **Grounding & action separation.** The seven concerns are separated so the model
 can only *propose*. Deterministic code extracts, validates, decides, and executes.
+
+**Response-intelligence separation.** Classification, memory, retrieval, drafting,
+quality scoring, sales scoring, and evidence validation are pure modules with
+direct tests. A weak or unsupported model proposal is discarded and regenerated
+from retrieved approved fragments. Each normal conversation turn records its
+intent, knowledge IDs, scores, and whether regeneration occurred.
+
+**Conversation strategy.** Every turn selects exactly one highest-value safe goal and creates a
+typed response plan before drafting. Direct questions are never displaced by qualification;
+ambiguous requests clarify; missing fields advance only when relevant; booking is not offered before
+a meaningful need is known. Progress scoring rejects goal-plan drift and repeated questions.
 
 ---
 

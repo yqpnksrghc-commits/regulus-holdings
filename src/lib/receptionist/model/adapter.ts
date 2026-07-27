@@ -8,6 +8,10 @@
  * action; deterministic code decides and executes.
  */
 import type { QualificationFields, TranscriptTurn } from "@/lib/receptionist/schema";
+import type { IntentClassification } from "@/lib/receptionist/intent";
+import type { RetrievalResult } from "@/lib/receptionist/retrieval";
+import type { ConversationGoalSelection } from "@/lib/receptionist/goal";
+import type { ResponsePlan } from "@/lib/receptionist/response-plan";
 
 export type ModelContext = {
   transcript: TranscriptTurn[];
@@ -15,6 +19,10 @@ export type ModelContext = {
   sourcePage: string | null;
   /** Flags raised by the injection/spam guard for the latest visitor turn. */
   visitorFlags: string[];
+  classification: IntentClassification;
+  retrieval: RetrievalResult;
+  goal: ConversationGoalSelection;
+  plan: ResponsePlan;
 };
 
 export type ProposedAction =
@@ -31,6 +39,8 @@ export type ModelReply = {
   proposedExtraction?: Partial<QualificationFields>;
   /** Optional action PROPOSAL (never self-executed by the model). */
   proposedAction?: ProposedAction;
+  /** Approved knowledge identifiers used to support the response. */
+  evidenceIds?: string[];
 };
 
 export interface ReceptionistModel {

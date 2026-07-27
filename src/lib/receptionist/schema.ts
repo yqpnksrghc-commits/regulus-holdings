@@ -46,18 +46,26 @@ export function isTerminal(state: ConversationState): boolean {
 export type QualificationFields = {
   visitor_name: string | null;
   company_name: string | null;
+  business_type: string | null;
+  industry: string | null;
+  business_size: string | null;
   email: string | null;
   phone: string | null;
   preferred_contact_method: "email" | "phone" | null;
   inquiry_type: string | null;
   business_problem: string | null;
+  pain_points: string[];
   current_process: string | null;
   desired_outcome: string | null;
+  goals: string[];
   urgency: "low" | "medium" | "high" | null;
   approximate_monthly_lead_volume: string | null;
   approximate_staff_time_lost: string | null;
   budget_signal: string | null;
   decision_authority: "yes" | "no" | "unknown" | null;
+  requested_services: string[];
+  questions_answered: string[];
+  preferred_communication_style: "concise" | "detailed" | "technical" | null;
   booking_intent: boolean;
   human_requested: boolean;
   consent_to_follow_up: boolean;
@@ -72,18 +80,26 @@ export function emptyQualification(): QualificationFields {
   return {
     visitor_name: null,
     company_name: null,
+    business_type: null,
+    industry: null,
+    business_size: null,
     email: null,
     phone: null,
     preferred_contact_method: null,
     inquiry_type: null,
     business_problem: null,
+    pain_points: [],
     current_process: null,
     desired_outcome: null,
+    goals: [],
     urgency: null,
     approximate_monthly_lead_volume: null,
     approximate_staff_time_lost: null,
     budget_signal: null,
     decision_authority: null,
+    requested_services: [],
+    questions_answered: [],
+    preferred_communication_style: null,
     booking_intent: false,
     human_requested: false,
     consent_to_follow_up: false,
@@ -135,6 +151,33 @@ export type ConversationRecord = {
   source_page: string | null;
   campaign_parameters: string | null;
   extraction_source: "deterministic" | "model+deterministic";
+  /** Latest independently testable response-intelligence evidence. */
+  response_intelligence?: {
+    intent: string;
+    confidence: number;
+    secondary_intents: string[];
+    knowledge_ids: string[];
+    quality_score: number;
+    sales_score: number;
+    evidence_score: number;
+    progress_score: number;
+    regenerated: boolean;
+    selected_goal: string;
+    goal_reason: string;
+    goal_confidence: number;
+    blocked_goals: string[];
+    required_known_fields: string[];
+    expected_state_change: string;
+    response_plan: {
+      primary_goal: string;
+      direct_answer_required: boolean;
+      knowledge_ids: string[];
+      context_purpose: string;
+      question_field: string | null;
+      proposed_action: string;
+      expected_progress: string;
+    };
+  };
 };
 
 /** A verified, offerable discovery-call time. `slot_id` is a stable hash of start|end. */
