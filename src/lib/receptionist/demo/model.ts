@@ -58,6 +58,7 @@ export class DemoModel implements ReceptionistModel {
   // Named "deterministic" so the engine records extraction_source consistently
   // with the production deterministic path — the demo is fully reproducible.
   readonly name = "deterministic";
+  readonly approvedKnowledgeScope = "external";
 
   async respond(context: ModelContext): Promise<ModelReply> {
     const { transcript, qualification, visitorFlags } = context;

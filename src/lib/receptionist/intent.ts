@@ -27,7 +27,7 @@ const RULES: { intent: ReceptionistIntent; pattern: RegExp; weight: number }[] =
   { intent: "pricing", pattern: /\b(price|pricing|cost|how much|fee|charge|rate|budget)\b/i, weight: 0.98 },
   { intent: "booking", pattern: /\b(?:book|schedule|arrange|set up)\b.{0,24}\b(?:call|meeting|consultation|discovery|demo|appointment|time)\b|\b(?:discovery|consultation)\s+call\b/i, weight: 0.97 },
   { intent: "career", pattern: /\b(job|career|hiring|resume|application|work for)\b/i, weight: 0.96 },
-  { intent: "existing_client", pattern: /\b(existing|current) client\b|\bour (account|project|invoice)\b/i, weight: 0.94 },
+  { intent: "existing_client", pattern: /\b(?:(?:existing|current) client|already (?:a|an) client)\b|\bour (account|project|invoice)\b/i, weight: 0.94 },
   { intent: "support", pattern: /\b(support|help with my|not working|issue with|problem with my)\b/i, weight: 0.9 },
   { intent: "technical_question", pattern: /\b(api|integration|software|technology|tech stack|security|data|model|ai)\b/i, weight: 0.88 },
   { intent: "implementation", pattern: /\b(implement|deployment|timeline|how long|build|install|connect to)\b/i, weight: 0.9 },
@@ -49,7 +49,10 @@ export function classifyIntent(text: string): IntentClassification {
     confidence: matches[0].weight,
     secondary_intents: unique
       .slice(1)
-      .filter((intent) => !(primary === "company_overview" && intent === "services"))
+      .filter((intent) =>
+        !(primary === "company_overview" && intent === "services") &&
+        !(primary === "privacy" && intent === "technical_question"),
+      )
       .slice(0, 3),
   };
 }

@@ -103,3 +103,20 @@ test("response-intelligence evidence is stored with every normal turn", async ()
   assert.ok((turn.record.response_intelligence?.sales_score ?? 0) >= 5);
   assert.equal(turn.record.response_intelligence?.evidence_score, 5);
 });
+
+test("already-a-client phrasing routes to the verified support path", async () => {
+  const record = newConversation("existing-client", "/", null, NOW);
+  const turn = await processVisitorTurn(record, "I'm already a client and need help.", model, { now: NOW });
+  assert.equal(turn.record.response_intelligence?.intent, "existing_client");
+  assert.match(turn.reply, /info@regulusautomation\.ca/);
+  assert.equal(turn.record.human_takeover, false);
+});
+
+test("privacy questions retrieve only the privacy boundary and do not fall back", async () => {
+  const record = newConversation("privacy-boundary", "/", null, NOW);
+  const turn = await processVisitorTurn(record, "How do you handle my personal data?", model, { now: NOW });
+  assert.equal(turn.record.error, null);
+  assert.equal(turn.record.response_intelligence?.intent, "privacy");
+  assert.deepEqual(turn.record.response_intelligence?.knowledge_ids, ["privacy.note"]);
+  assert.match(turn.reply, /used only to respond to your inquiry/i);
+});

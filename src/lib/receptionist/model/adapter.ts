@@ -45,5 +45,11 @@ export type ModelReply = {
 
 export interface ReceptionistModel {
   readonly name: string;
+  /**
+   * Models backed by an isolated tenant knowledge source cannot be evaluated
+   * against Regulus retrieval facts. Their action/extraction proposals still
+   * pass through every deterministic engine gate.
+   */
+  readonly approvedKnowledgeScope?: "regulus" | "external";
   respond(context: ModelContext): Promise<ModelReply>;
 }

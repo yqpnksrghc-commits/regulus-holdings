@@ -135,11 +135,12 @@ test("detectMedicalAdviceRequest flags health + suitability questions; booking i
 });
 
 // ---------- reuse: human handoff, appointment change, spam, injection ----------
-test("human request escalates via the reused engine", async () => {
+test("human request captures contact before terminal escalation", async () => {
   const { view, record } = await drive(["Can I speak to a person please?"]);
-  assert.equal(record.state, "HUMAN_REQUESTED");
-  assert.equal(view.outcome, "ESCALATED");
+  assert.equal(record.state, "CONTACT_CAPTURE");
+  assert.equal(view.outcome, "IN_PROGRESS");
   assert.equal(record.human_takeover, true);
+  assert.match(view.reply, /email|phone|reach you/i);
 });
 
 test("appointment-change request routes to a human (escalation), no medical detail taken", async () => {

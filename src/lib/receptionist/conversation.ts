@@ -220,57 +220,60 @@ export async function processVisitorTurn(
   record.confidence_by_field = mergeConfidence(record.confidence_by_field, rec.confidence);
   record.qualification = rememberAnsweredQuestion(record.qualification, classification);
 
-  // 5/6/7. Quality, sales, and evidence evaluation. Any weak proposal is
-  // regenerated from deterministic approved fragments, then scored again.
-  const canonical = draftConsultativeResponse(classification, retrieval, record.qualification, plan);
-  if (sensitiveInput) {
-    canonical.reply = `${PRIVACY_NOTE}\n\n${canonical.reply}`;
-    canonical.directAnswer = PRIVACY_NOTE;
-    if (!canonical.evidenceIds.includes("privacy.note")) canonical.evidenceIds.unshift("privacy.note");
-  }
   let reply = redactSecrets(proposal.reply).slice(0, 2000);
-  let evidenceIds = proposal.evidenceIds ?? [];
-  let quality = evaluateQuality(reply, canonical.directAnswer);
-  let sales = evaluateSales(reply);
-  let evidence = validateEvidence(reply, evidenceIds, retrieval.facts, canonical.reply);
-  let progress = evaluateConversationProgress(reply, goal, plan, previousReceptionistReplies);
-  let regenerated = false;
-  if (!quality.passed || !sales.passed || !evidence.passed || !progress.passed) {
-    reply = canonical.reply;
-    evidenceIds = canonical.evidenceIds;
-    quality = evaluateQuality(reply, canonical.directAnswer);
-    sales = evaluateSales(reply);
-    evidence = validateEvidence(reply, evidenceIds, retrieval.facts, canonical.reply);
-    progress = evaluateConversationProgress(reply, goal, plan, previousReceptionistReplies);
-    regenerated = true;
-  }
-  record.response_intelligence = {
-    intent: classification.intent,
-    confidence: classification.confidence,
-    secondary_intents: classification.secondary_intents,
-    knowledge_ids: evidenceIds,
-    quality_score: quality.score,
-    sales_score: sales.score,
-    evidence_score: evidence.score,
-    progress_score: progress.score,
-    regenerated,
-    selected_goal: goal.selected_goal,
-    goal_reason: goal.reason,
-    goal_confidence: goal.confidence,
-    blocked_goals: goal.blocked_goals,
-    required_known_fields: goal.required_known_fields,
-    expected_state_change: goal.expected_state_change,
-    response_plan: plan,
-  };
-  if (!quality.passed || !sales.passed || !evidence.passed || !progress.passed) {
-    applyState(record, "ERROR_RECOVERABLE");
-    record.error = "response_evaluation_failed";
-    record.updated_at = now.toISOString();
-    return {
-      record,
-      reply: "Regulus begins by examining the workflow and the evidence available. What business process would you like to improve?",
-      effect: { kind: "none" },
+  // 5/6/7. Regulus responses are evaluated against Regulus-approved retrieval.
+  // Isolated tenant adapters retain their own approved knowledge boundary; they
+  // still use the shared extraction, action, booking, state, and safety gates.
+  if (model.approvedKnowledgeScope !== "external") {
+    const canonical = draftConsultativeResponse(classification, retrieval, record.qualification, plan);
+    if (sensitiveInput) {
+      canonical.reply = `${PRIVACY_NOTE}\n\n${canonical.reply}`;
+      canonical.directAnswer = PRIVACY_NOTE;
+      if (!canonical.evidenceIds.includes("privacy.note")) canonical.evidenceIds.unshift("privacy.note");
+    }
+    let evidenceIds = proposal.evidenceIds ?? [];
+    let quality = evaluateQuality(reply, canonical.directAnswer);
+    let sales = evaluateSales(reply);
+    let evidence = validateEvidence(reply, evidenceIds, retrieval.facts, canonical.reply);
+    let progress = evaluateConversationProgress(reply, goal, plan, previousReceptionistReplies);
+    let regenerated = false;
+    if (!quality.passed || !sales.passed || !evidence.passed || !progress.passed) {
+      reply = canonical.reply;
+      evidenceIds = canonical.evidenceIds;
+      quality = evaluateQuality(reply, canonical.directAnswer);
+      sales = evaluateSales(reply);
+      evidence = validateEvidence(reply, evidenceIds, retrieval.facts, canonical.reply);
+      progress = evaluateConversationProgress(reply, goal, plan, previousReceptionistReplies);
+      regenerated = true;
+    }
+    record.response_intelligence = {
+      intent: classification.intent,
+      confidence: classification.confidence,
+      secondary_intents: classification.secondary_intents,
+      knowledge_ids: evidenceIds,
+      quality_score: quality.score,
+      sales_score: sales.score,
+      evidence_score: evidence.score,
+      progress_score: progress.score,
+      regenerated,
+      selected_goal: goal.selected_goal,
+      goal_reason: goal.reason,
+      goal_confidence: goal.confidence,
+      blocked_goals: goal.blocked_goals,
+      required_known_fields: goal.required_known_fields,
+      expected_state_change: goal.expected_state_change,
+      response_plan: plan,
     };
+    if (!quality.passed || !sales.passed || !evidence.passed || !progress.passed) {
+      applyState(record, "ERROR_RECOVERABLE");
+      record.error = "response_evaluation_failed";
+      record.updated_at = now.toISOString();
+      return {
+        record,
+        reply: "Regulus begins by examining the workflow and the evidence available. What business process would you like to improve?",
+        effect: { kind: "none" },
+      };
+    }
   }
   record.updated_at = now.toISOString();
 
