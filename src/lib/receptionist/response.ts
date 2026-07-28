@@ -26,7 +26,7 @@ function directAnswerFor(intent: IntentClassification["intent"], retrieval: Retr
     case "industries":
       return f[0]?.text ?? "Regulus focuses on Ontario service businesses.";
     case "pricing":
-      return `${first(f, "pricing.fit_review")?.text ?? ""} ${first(f, "pricing.audit")?.text ?? ""}`.trim();
+      return `${first(f, "pricing.free_audit")?.text ?? ""} ${first(f, "pricing.implementation")?.text ?? ""} ${first(f, "pricing.management")?.text ?? ""}`.trim();
     case "booking":
       return "Yes — I can help you move toward a discovery call.";
     case "implementation":

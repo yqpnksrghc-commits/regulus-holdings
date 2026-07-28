@@ -8,6 +8,7 @@ import { emptyQualification } from "../src/lib/receptionist/schema";
 import { DeterministicModel } from "../src/lib/receptionist/model/deterministic";
 import { newConversation, processVisitorTurn } from "../src/lib/receptionist/conversation";
 import type { ModelContext, ModelReply, ReceptionistModel } from "../src/lib/receptionist/model/adapter";
+import { groundedAnswer } from "../src/lib/receptionist/knowledge";
 
 const NOW = new Date("2026-07-27T14:00:00Z");
 const model = new DeterministicModel();
@@ -37,6 +38,29 @@ test("retrieval is narrow: company overview excludes pricing and technical conte
   assert.deepEqual(result.facts.map((f) => f.id), ["company.identity", "company.audience"]);
   assert.equal(result.facts.some((f) => f.id.startsWith("pricing.")), false);
   assert.equal(result.facts.some((f) => f.id.startsWith("service.")), false);
+});
+
+test("receptionist preserves the corporate and Business Systems relationship", () => {
+  const answer = groundedAnswer("what_is_regulus") ?? "";
+  assert.match(answer, /larger institution/i);
+  assert.match(answer, /Regulus Business Systems/i);
+  assert.match(answer, /operational intelligence, products, discovery, and research/i);
+});
+
+test("receptionist quotes the free audit and optional typical ranges without legacy pricing", () => {
+  const answer = groundedAnswer("pricing") ?? "";
+  assert.match(answer, /Free Time & Workflow Recovery Audit is CAD \$0/i);
+  assert.match(answer, /typically CAD \$2,500–\$5,000/i);
+  assert.match(answer, /typically CAD \$750–\$1,500 per month/i);
+  assert.match(answer, /optional/i);
+  assert.doesNotMatch(answer, /CAD \$500|prepaid/i);
+});
+
+test("receptionist organizes Business Systems around the three offer families", () => {
+  const answer = groundedAnswer("services") ?? "";
+  assert.match(answer, /Lead Capture/);
+  assert.match(answer, /Workflow Recovery/);
+  assert.match(answer, /Owner Intelligence/);
 });
 
 test("every supported intent drafts a direct answer plus exactly one qualification question", () => {

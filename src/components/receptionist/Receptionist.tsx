@@ -127,6 +127,7 @@ export function Receptionist() {
           type="button"
           onClick={openPanel}
           aria-label="Open the Regulus AI receptionist"
+          data-analytics-event="chat_open"
           className="fixed bottom-4 right-4 z-[70] flex items-center gap-2 rounded-full border border-line bg-ink px-5 py-3 text-sm font-medium text-bg shadow-card transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-accent/50"
         >
           <span aria-hidden>💬</span> Ask Regulus

@@ -28,7 +28,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
         breadcrumbJsonLd([{name:"Home",path:"/"},{name:"Automation services",path:"/automation"},{name:service.name,path:`/automation/${slug}`}]),
       ])}} />
       <PageHero eyebrow="Automation service" title={service.name} lead={service.description} />
-      {(slug==="automation-opportunity-audit" || slug==="value-leakage-audit") && <Section tone="bg-2"><div className="grid gap-8 lg:grid-cols-2">
+      {slug==="automation-opportunity-audit" && <Section tone="bg-2"><div className="grid gap-8 lg:grid-cols-2">
         <div><h2 className="text-h2">Who the audit is for</h2><p className="mt-4 text-ink-soft">Organizations experiencing repeated administrative work, delayed responses, missed follow-up, fragmented information, or limited visibility into where work waits.</p>
         <h2 className="mt-9 text-h2">What is needed to begin</h2><p className="mt-4 text-ink-soft">A responsible contact, a bounded workflow, permission to observe agreed business processes, and available non-sensitive records that can support the assessment. Unknowns remain explicit.</p></div>
         <div><h2 className="text-h2">Observe → measure → understand → recover → improve</h2><ol className="mt-5 space-y-3 text-ink-soft"><li><strong>Observe:</strong> document the workflow and its sources.</li><li><strong>Measure:</strong> establish available baselines and evidence gaps.</li><li><strong>Understand:</strong> separate friction, assumptions, and constraints.</li><li><strong>Recover:</strong> recommend the smallest useful intervention.</li><li><strong>Improve:</strong> define how a later implementation would be evaluated.</li></ol>
@@ -55,8 +55,8 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
               <a className="link-underline" href="/industries/medical-dental-clinics">Automation for clinics</a>
               <a className="link-underline" href="/industries/professional-services">Automation for professional services</a>
             </div>
-            <Button href={slug === "value-leakage-audit" ? "/contact?intent=value-leakage-audit" : "/contact?intent=free-automation-audit"} size="lg" className="mt-7" data-analytics-event="service_page_cta_activation">
-              {slug === "value-leakage-audit" ? "Discuss the CAD $500 Audit" : "Request a Free Assessment"}
+            <Button href={slug === "automation-opportunity-audit" ? "/free-audit" : "/contact"} size="lg" className="mt-7" data-analytics-event={slug === "automation-opportunity-audit" ? "free_audit_cta" : "service_page_cta_activation"}>
+              {slug === "automation-opportunity-audit" ? "Request the Free Audit" : "Discuss this service"}
             </Button>
           </article>
         </div>

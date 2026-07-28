@@ -41,3 +41,6 @@ next-env.d.ts
 !public/*.png
 !src/app/*.png
 !src/app/**/*.png
+
+# Local Netlify CLI state and emulated persistence.
+.netlify/

@@ -10,6 +10,7 @@ import { Industries } from "@/components/sections/Industries";
 import { Values } from "@/components/sections/Values";
 import { CTA } from "@/components/sections/CTA";
 import { buildMetadata } from "@/lib/seo";
+import { BusinessSystemsBridge } from "@/components/sections/BusinessSystemsBridge";
 
 export const metadata = buildMetadata({
   title: "AI Automation & Operational Intelligence Toronto | Regulus",
@@ -24,6 +25,7 @@ export default function HomePage() {
       <Ethos />
       <Problem />
       <Approach />
+      <BusinessSystemsBridge />
       <PlatformGrid />
       <DiscoveryTeaser />
       <ResearchTeaser />

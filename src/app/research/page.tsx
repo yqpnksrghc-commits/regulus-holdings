@@ -17,7 +17,7 @@ const evidenceClasses = [
   {
     tone: "neutral",
     label: "Operational",
-    body: "Capability we have demonstrated and run in production contexts. When we say a product is operational, we can show it working.",
+    body: "Internal Regulus capability available for scoped implementation. When we call a capability operational, we can show it working.",
   },
   {
     tone: "emerald",

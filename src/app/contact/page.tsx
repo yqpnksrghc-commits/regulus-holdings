@@ -8,7 +8,7 @@ import { ContactForm } from "@/components/sections/ContactForm";
 export const metadata = buildMetadata({
   title: "Contact",
   path: "/contact",
-  description: "Tell us where value is leaking. We help you see it, quantify it, and recover it.",
+  description: "Tell Regulus what work is taking too much time, being missed, or waiting too long.",
 });
 
 export default function ContactPage() {
@@ -16,8 +16,8 @@ export default function ContactPage() {
     <>
       <PageHero
         eyebrow="Contact"
-        title="Start with where value is leaking."
-        lead="A short note is enough. Tell us what you are seeing, and we will help you measure it."
+        title="Start with the work that needs attention."
+        lead="What is taking too much time, being missed, or waiting too long? A short note is enough to begin."
       />
       <Section>
         <div className="grid gap-14 lg:grid-cols-[1.4fr_1fr]">

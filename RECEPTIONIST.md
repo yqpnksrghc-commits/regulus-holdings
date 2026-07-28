@@ -112,8 +112,8 @@ so retries and concurrent requests can never create a second event.
 ## 4. Approved knowledge source
 
 `src/lib/receptionist/knowledge.ts` composes the only assertable facts from
-already-canonical sources (`site.ts`, `commercial-services.ts`, contact-page
-pricing: free fit review + CAD $500 audit). The model may answer only from this
+already-canonical sources (`site.ts`, `commercial-services.ts`, and the
+Free Time & Workflow Recovery Audit engagement model). The model may answer only from this
 or deterministic system facts; anything else defers to a human. See
 `ESCALATION_TOPICS` for what must always be escalated.
 

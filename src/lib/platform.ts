@@ -189,7 +189,7 @@ export const intelligenceDomains: IntelligenceDomain[] = [
 export const evidenceMeta: Record<EvidenceClass, { label: string; blurb: string; tone: string }> = {
   operational: {
     label: "Operational",
-    blurb: "Demonstrated capability, running in production contexts.",
+    blurb: "Internal Regulus capability available for scoped implementation.",
     tone: "emerald",
   },
   research: {

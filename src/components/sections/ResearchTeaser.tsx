@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button, Arrow } from "@/components/ui/Button";
 
 const classes = [
-  { tone: "neutral", label: "Operational", body: "Demonstrated capability, running in production." },
+  { tone: "neutral", label: "Operational", body: "Internal Regulus capability available for scoped implementation." },
   { tone: "emerald", label: "Established Science", body: "Grounded in the accepted scientific record." },
   { tone: "accent", label: "Regulus Research", body: "Active investigation; promising, not yet proven." },
   { tone: "gold", label: "Speculative", body: "A hypothesis or direction, labeled as such." },

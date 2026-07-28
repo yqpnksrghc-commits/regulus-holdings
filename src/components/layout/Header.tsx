@@ -71,8 +71,8 @@ export function Header() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <div className="hidden sm:block">
-            <Button href="/contact" size="md">
-              Contact
+            <Button href="/free-audit" size="md" data-analytics-event="free_audit_cta">
+              Free Audit
             </Button>
           </div>
           <button
@@ -107,8 +107,8 @@ export function Header() {
               {item.description && <span className="text-sm text-dim">{item.description}</span>}
             </Link>
           ))}
-          <Button href="/contact" className="mt-2 w-full" size="lg">
-            Contact us
+          <Button href="/free-audit" className="mt-2 w-full" size="lg" data-analytics-event="free_audit_cta">
+            Free Audit
           </Button>
         </nav>
       </div>

@@ -53,17 +53,20 @@ export function Hero() {
             connect fragmented information, and help leaders recover measurable value.
           </motion.p>
 
-          <motion.div {...anim(4)} className="mt-10">
-            <Button href="/contact?intent=free-automation-audit" size="lg" className="group" data-analytics-event="audit_inquiry">
-              Request a Free Automation Assessment <Arrow />
+          <motion.div {...anim(4)} className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <Button href="/business-systems" size="lg" className="group" data-analytics-event="business_systems_cta">
+              Explore Business Systems <Arrow />
+            </Button>
+            <Button href="/free-audit" variant="secondary" size="lg" data-analytics-event="free_audit_cta">
+              Start the Free Audit
             </Button>
           </motion.div>
 
           <motion.dl {...anim(5)} className="mt-16 grid max-w-lg grid-cols-3 gap-6 border-t border-line pt-8">
             {[
-              { k: "Fast", v: "Lead acknowledgement" },
-              { k: "Visible", v: "Follow-up ownership" },
-              { k: "Measured", v: "Before claims" },
+              { k: "10", v: "Intelligence domains" },
+              { k: "Practical", v: "Systems deployed now" },
+              { k: "Evidence", v: "Before claims" },
             ].map((s) => (
               <div key={s.v}>
                 <dt className="text-2xl font-semibold text-ink">{s.k}</dt>

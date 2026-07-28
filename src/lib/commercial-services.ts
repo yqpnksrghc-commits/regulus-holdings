@@ -1,19 +1,11 @@
 export const commercialServices = [
   {
     slug: "automation-opportunity-audit",
-    name: "Free Automation Opportunity Assessment",
-    description: "A no-cost initial review of publicly observable workflow friction and the context you choose to share.",
-    problem: "Organizations often feel the cost of manual work before they can locate, measure, or prioritize it.",
-    outcome: "A brief opportunity map separating observations, assumptions, unknowns, and practical next steps. It is not the paid Value Leakage Audit or an implementation engagement.",
-    measures: ["observable workflow delays", "repetitive handoffs and re-entry", "missing ownership or follow-up states"],
-  },
-  {
-    slug: "value-leakage-audit",
-    name: "Value Leakage Audit (CAD $500, prepaid)",
-    description: "A paid engagement examining your client-approved inquiry and booking process and supplied evidence, with an editable findings report. The free Assessment is an initial fit review; this is the scoped diagnosis.",
-    problem: "When intake and follow-up span phone, forms, and separate tools, value can become difficult to see or measure.",
-    outcome: "An editable report with grounded observations, separately labelled assumptions, low/expected/high recoverable-value scenarios, confidence levels, and a prioritized intervention recommendation. Excludes implementation and any guaranteed performance or revenue claims. Fee CAD $500, paid in advance.",
-    measures: ["intake paths mapped", "hand-off points identified", "prioritized recoverable-value scenarios"],
+    name: "Free Time & Workflow Recovery Audit",
+    description: "A CAD $0 bounded review of work taking too much time, being missed, or waiting too long, with a prioritized recommendation.",
+    problem: "Growing businesses often feel the cost of missed inquiries and manual work before they can locate or prioritize the underlying workflow.",
+    outcome: "A prioritized recommendation separating observations, assumptions, unknowns, follow-up gaps, and practical automation opportunities. Implementation is separate and optional.",
+    measures: ["work taking too much time", "work being missed or delayed", "fragmented inquiry and follow-up paths"],
   },
   {
     slug: "business-process-automation",
@@ -74,3 +66,36 @@ export const commercialServices = [
 ] as const;
 
 export type CommercialService = (typeof commercialServices)[number];
+
+export const businessSystemsOffers = [
+  {
+    name: "Lead Capture",
+    description: "Give every inquiry a clear next action across calls, forms, email, social channels, and after-hours contact.",
+    items: ["Missed-call response", "Web-form acknowledgement", "After-hours capture", "Inquiry qualification", "Lead routing", "Follow-up visibility"],
+  },
+  {
+    name: "Workflow Recovery",
+    description: "Reduce routine coordination work and prevent important tasks from waiting unnoticed.",
+    items: ["Quoting and estimates", "Scheduling and reminders", "Dispatch and job coordination", "Forms and document movement", "Internal notifications", "Routine administration"],
+  },
+  {
+    name: "Owner Intelligence",
+    description: "See what needs attention without searching across disconnected systems.",
+    items: ["Leads awaiting response", "Jobs scheduled next", "Quotes needing follow-up", "Invoices overdue", "Work blocked or waiting", "Items requiring owner attention"],
+  },
+] as const;
+
+export const engagementModel = [
+  {
+    name: "Free audit — CAD $0",
+    description: "A bounded review of the current workflow and likely automation opportunities.",
+  },
+  {
+    name: "Implementation — typically CAD $2,500–$5,000",
+    description: "Optional and separately scoped around the selected opportunity, integrations, complexity, and delivery requirements.",
+  },
+  {
+    name: "Ongoing management — typically CAD $750–$1,500 per month",
+    description: "Optional monitoring, maintenance, adjustment, reporting, and continued improvement.",
+  },
+] as const;

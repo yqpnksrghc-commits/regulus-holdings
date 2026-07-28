@@ -88,7 +88,7 @@ export const industries = [
 export type Product = {
   name: string;
   slug: string;
-  status: "Available" | "In Development" | "Research";
+  status: "Scoped Implementation" | "In Development" | "Research";
   summary: string;
   evidence: EvidenceClass;
 };
@@ -97,14 +97,14 @@ export const products: Product[] = [
   {
     name: "Corporate Intelligence System",
     slug: "corporate-intelligence-system",
-    status: "Available",
+    status: "Scoped Implementation",
     summary: "The connected model of an organization — its flows, dependencies, and recoverable friction.",
     evidence: "operational",
   },
   {
     name: "Executive Dashboard",
     slug: "executive-dashboard",
-    status: "Available",
+    status: "Scoped Implementation",
     summary: "One surface where leaders see evidence, not anecdote — and act on it.",
     evidence: "operational",
   },
@@ -125,7 +125,7 @@ export const products: Product[] = [
   {
     name: "Discovery Engine",
     slug: "discovery-engine",
-    status: "Available",
+    status: "Scoped Implementation",
     summary: "Continuous search for recoverable waste, new capability, and high-leverage opportunity.",
     evidence: "operational",
   },

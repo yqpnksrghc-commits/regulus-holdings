@@ -9,22 +9,22 @@ questions commonly became an empty deferral to a Regulus team member.
 
 Visitor: “What does Regulus do?”
 
-> Regulus Automation Inc. identifies avoidable operational loss, quantifies it, and helps recover
-> persistent value.
+> Regulus Automation Inc. is the larger institution building operational intelligence, products,
+> discovery, and research. Regulus Business Systems is its practical commercial implementation
+> department for growing businesses.
 >
-> Regulus works with Ontario service businesses—medical and dental clinics and
-> professional-services firms—that want to recover missed leads and improve appointment follow-up
-> with evidence-first automation.
+> Regulus Business Systems initially focuses on home-service businesses, with professional
+> services, clinics, and aesthetic businesses as expansion markets.
 >
 > What industry does your business operate in?
 
 Visitor: “How much do you charge?”
 
-> A first fit review is free. If a deeper audit is useful, we scope a CAD $500 Automation
-> Opportunity Audit and agree it with you before any work begins.
+> The Free Time & Workflow Recovery Audit is CAD $0. Optional implementation is typically
+> CAD $2,500–$5,000.
 >
-> Any pricing beyond the free fit review and the CAD $500 audit is confirmed by a Regulus team
-> member for your specific situation.
+> Optional ongoing management is typically CAD $750–$1,500 per month. These are typical ranges,
+> not fixed commitments or guarantees.
 >
 > What industry does your business operate in?
 

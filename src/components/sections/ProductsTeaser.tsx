@@ -7,7 +7,7 @@ import { Arrow } from "@/components/ui/Button";
 import { products } from "@/lib/content";
 
 const statusTone = {
-  Available: "emerald",
+  "Scoped Implementation": "emerald",
   "In Development": "accent",
   Research: "gold",
 } as const;

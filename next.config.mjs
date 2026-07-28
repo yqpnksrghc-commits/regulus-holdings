@@ -6,6 +6,15 @@ const nextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
   },
+  async redirects() {
+    return [
+      {
+        source: "/automation/value-leakage-audit",
+        destination: "/free-audit",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     const isDev = process.env.NODE_ENV !== "production";
     // Next.js injects a small inline bootstrap script and inline styles; Framer

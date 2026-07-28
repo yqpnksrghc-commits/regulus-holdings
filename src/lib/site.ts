@@ -12,7 +12,7 @@ export const site = {
   displayName: "Regulus Automation",
   tagline: "Recovering Value. Building Intelligence.",
   description:
-    "Regulus helps Ontario service businesses recover missed leads and improve appointment follow-up with evidence-first automation.",
+    "Regulus builds operational intelligence and practical systems that identify avoidable loss, recover value, and strengthen organizational capability.",
   mission: "Identify avoidable loss, quantify it, and recover persistent value.",
   url: "https://regulusautomation.ca",
   locale: "en_CA",
@@ -26,12 +26,11 @@ export type NavItem = { label: string; href: string; description?: string };
 
 /** Primary navigation — mirrored in the header and the footer sitemap. */
 export const primaryNav: NavItem[] = [
-  { label: "Services", href: "/automation", description: "Lead response, appointments, and follow-up automation." },
-  { label: "Industries", href: "/industries", description: "Workflow automation shaped around real operating contexts." },
-  { label: "Insights", href: "/insights", description: "Practical guidance for evaluating automation opportunities." },
+  { label: "Business Systems", href: "/business-systems", description: "Practical systems for growing businesses." },
+  { label: "Solutions", href: "/solutions", description: "Ten domains of applied intelligence." },
+  { label: "Products", href: "/products", description: "What is shipping and what is next." },
   { label: "Discovery", href: "/discovery", description: "How Regulus finds opportunity." },
   { label: "Research", href: "/research", description: "Evidence, clearly classified." },
-  { label: "Products", href: "/products", description: "What is shipping and what is next." },
   { label: "About", href: "/about", description: "Mission, doctrine, and long view." },
 ];
 
@@ -50,6 +49,9 @@ export const footerNav: { title: string; items: NavItem[] }[] = [
   {
     title: "Platform",
     items: [
+      { label: "Business Systems", href: "/business-systems" },
+      { label: "Home Services", href: "/business-systems/home-services" },
+      { label: "Automation Services", href: "/automation" },
       { label: "Solutions", href: "/solutions" },
       { label: "Discovery Engine", href: "/discovery" },
       { label: "Products", href: "/products" },
@@ -59,11 +61,12 @@ export const footerNav: { title: string; items: NavItem[] }[] = [
     ],
   },
   {
-    title: "Principles",
+    title: "Engage",
     items: [
+      { label: "Free Time & Workflow Recovery Audit", href: "/free-audit" },
+      { label: "Industries", href: "/industries" },
+      { label: "Insights", href: "/insights" },
       { label: "Evidence over assumptions", href: "/philosophy#evidence" },
-      { label: "Recovery over replacement", href: "/philosophy#recovery" },
-      { label: "Intelligence through integration", href: "/philosophy#integration" },
     ],
   },
 ];

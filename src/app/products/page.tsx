@@ -13,7 +13,7 @@ export const metadata = buildMetadata({
   description: "What Regulus ships today, what is in development, and the long-term research roadmap.",
 });
 
-const statusTone = { Available: "emerald", "In Development": "accent", Research: "gold" } as const;
+const statusTone = { "Scoped Implementation": "emerald", "In Development": "accent", Research: "gold" } as const;
 
 export default function ProductsPage() {
   return (

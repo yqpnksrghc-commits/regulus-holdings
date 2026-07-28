@@ -19,7 +19,8 @@ const CANONICAL_ORIGIN = "https://regulusautomation.ca";
 const LEGAL_NAME = "Regulus Automation Inc.";
 
 const routes = [
-  "/", "/automation", "/automation/automation-opportunity-audit", "/automation/business-process-automation",
+  "/", "/business-systems", "/business-systems/home-services", "/free-audit",
+  "/automation", "/automation/automation-opportunity-audit", "/automation/business-process-automation",
   "/automation/ai-workflow-automation", "/automation/operational-intelligence",
   "/industries", "/industries/medical-dental-clinics", "/industries/professional-services",
   "/insights", "/insights/how-to-identify-workflows-worth-automating",
@@ -112,8 +113,32 @@ try {
   const labels = count(/<label\b/gi, contact);
   if (labels < inputs - 1) warnings.push(`contact: ${inputs} fields but only ${labels} labels`);
   if (!/company_website/.test(contact)) errors.push(`contact: honeypot field missing`);
+  if (!/What work is taking too much time, being missed, or waiting too long/i.test(contact)) {
+    errors.push(`contact: clear workflow-recovery question missing`);
+  }
 } catch (e) {
   errors.push(`contact form check failed: ${e.message}`);
+}
+
+// --- Commercial offer consistency and legacy redirect ---
+try {
+  const commercial = [
+    await (await fetch(BASE + "/business-systems")).text(),
+    await (await fetch(BASE + "/business-systems/home-services")).text(),
+    await (await fetch(BASE + "/free-audit")).text(),
+    await (await fetch(BASE + "/automation")).text(),
+  ].join("\n");
+  if (!/Free Time &amp; Workflow Recovery Audit/.test(commercial)) errors.push(`commercial: canonical audit name missing`);
+  if (!/CAD \$0/.test(commercial)) errors.push(`commercial: free audit price missing`);
+  if (/CAD \$500|\$500 (?:audit|assessment)|prepaid audit/i.test(commercial)) errors.push(`commercial: outdated CAD $500 offer found`);
+  if (!/typically CAD \$2,500(?:–|-)\$5,000/i.test(commercial)) errors.push(`commercial: implementation range missing`);
+  if (!/typically CAD \$750(?:–|-)\$1,500 per month/i.test(commercial)) errors.push(`commercial: management range missing`);
+  const legacy = await fetch(BASE + "/automation/value-leakage-audit", { redirect: "manual" });
+  if (![301, 307, 308].includes(legacy.status) || legacy.headers.get("location") !== "/free-audit") {
+    errors.push(`commercial: legacy audit redirect incorrect (${legacy.status} ${legacy.headers.get("location")})`);
+  }
+} catch (e) {
+  errors.push(`commercial offer check failed: ${e.message}`);
 }
 
 // --- Every internal link resolves ---
