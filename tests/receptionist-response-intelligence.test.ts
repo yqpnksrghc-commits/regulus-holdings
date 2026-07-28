@@ -31,6 +31,16 @@ test("intent classifier returns primary, confidence, and secondary intents", () 
   assert.ok(result.secondary_intents.includes("booking"));
 });
 
+test("commercial architecture questions route to their approved knowledge", () => {
+  const cases = [
+    ["What is the larger Regulus Automation vision?", "company_overview"],
+    ["How does Regulus Business Systems fit within Regulus Automation?", "company_overview"],
+    ["Do you work with home-service businesses?", "industries"],
+    ["Is the Time and Workflow Recovery Audit free?", "pricing"],
+  ] as const;
+  for (const [question, intent] of cases) assert.equal(classifyIntent(question).intent, intent, question);
+});
+
 test("retrieval is narrow: company overview excludes pricing and technical context", () => {
   const classification = classifyIntent("What does Regulus Automation do?");
   assert.equal(classification.intent, "company_overview");
