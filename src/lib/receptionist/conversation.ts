@@ -25,6 +25,7 @@ import { evaluateQuality, evaluateSales, validateEvidence } from "@/lib/receptio
 import { evaluateConversationProgress } from "@/lib/receptionist/evaluation";
 import { selectConversationGoal } from "@/lib/receptionist/goal";
 import { createResponsePlan } from "@/lib/receptionist/response-plan";
+import { industryByKey, opportunityReflection, workflowByKey } from "@/lib/receptionist/domain-knowledge";
 import type { ReceptionistModel } from "@/lib/receptionist/model/adapter";
 import type { AvailabilityProvider } from "@/lib/receptionist/calendar/adapter";
 import { slotsAreFresh } from "@/lib/receptionist/calendar/availability";
@@ -48,8 +49,24 @@ function slotList(slots: OfferedSlot[]): string {
 /** Availability that returns no slots — the default when no calendar is configured. */
 const noAvailability: AvailabilityProvider = async () => [];
 
+/**
+ * Phase 1 orientation. It opens on the visitor's problem, not on Regulus and
+ * not on a form — the assistant has to be useful before it asks for anything.
+ */
 export const GREETING_MESSAGE =
-  `Hi — welcome to Regulus Automation. ${AI_DISCLOSURE} What brings you here today?`;
+  `${AI_DISCLOSURE}\n\nWhat takes too much time in your business — or too often gets missed?`;
+
+/** Optional starting points offered as buttons. Tapping one sends its label. */
+export const STARTING_POINTS = [
+  "New enquiries",
+  "Follow-up",
+  "Scheduling",
+  "Estimates or quotes",
+  "Customer communication",
+  "Payroll or administration",
+  "Reporting",
+  "Something else",
+] as const;
 
 /** A booking provider returns durable calendar evidence, or null. No calendar
  * is configured in Phase 1, so the default provider always returns null and
@@ -97,11 +114,91 @@ function mergeConfidence(a: ConversationRecord["confidence_by_field"], b: Conver
   return out;
 }
 
+/**
+ * Phase 6 — the structured internal brief.
+ *
+ * Every line is either something the visitor actually said or an explicitly
+ * labelled hypothesis. Unknowns are printed as "not stated" rather than omitted,
+ * so a reader can tell the difference between "no problem here" and "we never
+ * asked". This text becomes the lead's value_leak_description, which is what
+ * lands in the existing review pipeline.
+ */
+export function buildLeadBrief(record: ConversationRecord): string {
+  const q = record.qualification;
+  const v = (x: string | null | undefined) => (x && String(x).trim() ? String(x).trim() : "not stated");
+  const list = (x: string[]) => (x.length ? x.join(", ") : "not stated");
+  const workflow = workflowByKey(q.workflow);
+  const industry = industryByKey(q.industry);
+
+  return [
+    `REGULUS BUSINESS ASSISTANT — LEAD BRIEF`,
+    `Conversation: ${record.conversation_id}`,
+    ``,
+    `CONTACT`,
+    `- Name: ${v(q.visitor_name)}`,
+    `- Business: ${v(q.company_name)}`,
+    `- Role: ${v(q.visitor_role)}`,
+    `- Email: ${v(q.email)}`,
+    `- Phone: ${v(q.phone)}`,
+    `- Preferred contact: ${v(q.preferred_contact_method)}`,
+    `- Consent to follow up: ${q.consent_to_follow_up ? "yes" : "not given"}`,
+    ``,
+    `SITUATION`,
+    `- Industry: ${industry ? industry.label : v(q.industry)}`,
+    `- Company size: ${v(q.business_size)}`,
+    `- Workflow: ${workflow ? workflow.label : v(q.workflow)}`,
+    `- Stated problem: ${v(q.business_problem)}`,
+    `- Current process: ${v(q.current_process)}`,
+    `- Frequency: ${v(q.frequency)}`,
+    `- People involved: ${v(q.people_involved)}`,
+    `- Tools named: ${list(q.tools_used)}`,
+    `- Consequence: ${v(q.consequence)}`,
+    `- Desired outcome: ${v(q.desired_outcome)}`,
+    `- Urgency: ${v(q.urgency)}`,
+    ``,
+    `ASSESSMENT (assistant hypothesis — not verified)`,
+    `- Possible automation: ${v(q.automation_hypothesis)}`,
+    `- Confidence: ${v(q.hypothesis_confidence)}`,
+    `- Missing evidence: ${list(q.missing_evidence)}`,
+    `- Contraindication: ${workflow ? workflow.contraindication : "not assessed"}`,
+    ``,
+    `NEXT STEP`,
+    `- Requested: ${q.booking_intent ? "discovery conversation" : q.human_requested ? "speak with a person" : "follow-up"}`,
+    `- Recommended human follow-up: confirm the current process and volumes before proposing anything.`,
+    ``,
+    `PROVENANCE`,
+    `- Source page: ${v(q.source_page || record.source_page)}`,
+    `- Campaign: ${v(q.campaign_parameters || record.campaign_parameters)}`,
+    `- Turns: ${record.transcript.length}`,
+    `- Flags: ${list(record.flags)}`,
+    ``,
+    `TRANSCRIPT (excerpt — full transcript is on the stored conversation record)`,
+    ...transcriptExcerpt(record),
+  ].join("\n");
+}
+
+/**
+ * The lead store caps value_leak_description at 3000 characters, so the brief
+ * carries a bounded transcript excerpt: the visitor's own words, most recent
+ * last. The complete transcript always remains on the conversation record in
+ * Blobs, keyed by conversation_id, so nothing is lost.
+ */
+function transcriptExcerpt(record: ConversationRecord): string[] {
+  const lines = record.transcript.map((t) => `[${t.role}] ${t.text.replace(/\s+/g, " ").slice(0, 200)}`);
+  let budget = 900;
+  const out: string[] = [];
+  for (const line of lines.slice().reverse()) {
+    if (budget - line.length < 0) break;
+    budget -= line.length;
+    out.unshift(line);
+  }
+  if (out.length < lines.length) out.unshift(`… ${lines.length - out.length} earlier turn(s) omitted`);
+  return out;
+}
+
 function toLeadInput(record: ConversationRecord, now: number): LeadInput {
   const q = record.qualification;
-  const description =
-    [q.business_problem, q.current_process, q.desired_outcome, q.inquiry_type].filter(Boolean).join(" — ") ||
-    "Website receptionist conversation — details captured in transcript.";
+  const description = buildLeadBrief(record);
   return {
     name: q.visitor_name || "Website visitor",
     email: q.email || "",
@@ -190,8 +287,28 @@ export async function processVisitorTurn(
     classification,
     qualification: record.qualification,
     visitorFlags,
+    previousReplies: previousReceptionistReplies,
   });
   const plan = createResponsePlan(goal, classification, retrieval, record.qualification, previousReceptionistReplies);
+
+  // When the assistant reflects an opportunity, record the hypothesis, its
+  // confidence, and what a person must still verify. These travel with the lead
+  // brief so Ian sees the reasoning and its limits, never a bare assertion.
+  const activeWorkflow = workflowByKey(record.qualification.workflow);
+  if (goal.selected_goal === "reflect_opportunity" && activeWorkflow) {
+    const reflection = opportunityReflection({
+      industry: industryByKey(record.qualification.industry),
+      workflow: activeWorkflow,
+      problem: record.qualification.business_problem,
+      currentProcess: record.qualification.current_process,
+      frequency: record.qualification.frequency,
+      consequence: record.qualification.consequence,
+      desiredOutcome: record.qualification.desired_outcome,
+    });
+    record.qualification.automation_hypothesis = activeWorkflow.safeExamples[0];
+    record.qualification.hypothesis_confidence = reflection.confidence;
+    record.qualification.missing_evidence = [activeWorkflow.verification];
+  }
 
   // 3. Model drafts from the retrieved knowledge only.
   let proposal;
@@ -225,7 +342,7 @@ export async function processVisitorTurn(
   // Isolated tenant adapters retain their own approved knowledge boundary; they
   // still use the shared extraction, action, booking, state, and safety gates.
   if (model.approvedKnowledgeScope !== "external") {
-    const canonical = draftConsultativeResponse(classification, retrieval, record.qualification, plan);
+    const canonical = draftConsultativeResponse(classification, retrieval, record.qualification, plan, clean, previousReceptionistReplies);
     if (sensitiveInput) {
       canonical.reply = `${PRIVACY_NOTE}\n\n${canonical.reply}`;
       canonical.directAnswer = PRIVACY_NOTE;
@@ -353,9 +470,14 @@ export async function processVisitorTurn(
     }
   } else if (action === "create_lead" || (hasMinimumViableLead(q) && q.email)) {
     if (q.email) {
+      // Capture the lead so nothing is lost, but do NOT end the conversation.
+      // Terminating here meant that a visitor who offered their email early was
+      // cut off before the assistant had been useful — the opposite of the
+      // intended flow. Only an explicit handoff, a booking outcome, spam, or the
+      // turn cap may terminate. Re-creating the lead on later turns is safe: the
+      // store de-duplicates on (email, description).
       applyState(record, activeNext(record.state, q));
       effect = { kind: "create_lead", reason: "qualified", leadInput: toLeadInput(record, now.getTime()) };
-      applyState(record, "COMPLETED");
     } else {
       applyState(record, activeNext(record.state, q));
     }

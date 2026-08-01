@@ -39,6 +39,13 @@ const FACTS: Record<Exclude<ReceptionistIntent, "unknown">, KnowledgeFact[]> = {
     })),
   ],
   industries: [{ id: "company.audience", text: APPROVED_AUDIENCE, source: "src/lib/site.ts + industry pages" }],
+  // A named business function. The reply is composed from the workflow
+  // vocabulary in domain-knowledge.ts; these facts ground the offer and process
+  // boundary that accompanies it.
+  workflow_topic: [
+    { id: "process.discovery", text: APPROVED_DISCOVERY, source: "src/app/free-audit/page.tsx" },
+    { id: "company.audience", text: APPROVED_AUDIENCE, source: "src/lib/site.ts + industry pages" },
+  ],
   pricing: [
     { id: "pricing.free_audit", text: APPROVED_PRICING.free_audit, source: "src/app/free-audit/page.tsx" },
     { id: "pricing.implementation", text: APPROVED_PRICING.implementation, source: "src/lib/commercial-services.ts" },

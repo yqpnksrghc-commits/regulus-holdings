@@ -71,7 +71,9 @@ export function evaluateConversationProgress(
   plan: ResponsePlan,
   previousReceptionistReplies: string[],
 ): Evaluation {
-  const plannedQuestion = questionForField(plan.question_field);
+  // The plan carries its own question text (interpretive goals need wording no
+  // generic field question can express); fall back to the field question.
+  const plannedQuestion = plan.question_text ?? questionForField(plan.question_field);
   const latestPreviousQuestion = [...previousReceptionistReplies].reverse()
     .map((text) => text.split(/\n+/).findLast((part) => part.includes("?")) ?? "")
     .find(Boolean);

@@ -3,6 +3,7 @@ import type { IntentClassification } from "@/lib/receptionist/intent";
 import type { RetrievalResult } from "@/lib/receptionist/retrieval";
 import type { QualificationFields } from "@/lib/receptionist/schema";
 import { questionForField } from "@/lib/receptionist/conversation-memory";
+import { industryByKey, industryOrientation, workflowByKey, workflowOrientation } from "@/lib/receptionist/domain-knowledge";
 
 export type ResponsePlan = {
   primary_goal: ConversationGoal;
@@ -10,6 +11,12 @@ export type ResponsePlan = {
   knowledge_ids: string[];
   context_purpose: "explain" | "build_trust" | "set_boundary" | "show_relevance" | "none";
   question_field: keyof QualificationFields | null;
+  /**
+   * The exact question this turn must ask, or null for none. Interpretation
+   * goals supply a domain-specific question that no generic field question can
+   * express, so the plan carries the text rather than deriving it from a field.
+   */
+  question_text: string | null;
   proposed_action: "none" | "offer_booking" | "request_human" | "create_lead" | "mark_out_of_scope";
   expected_progress: string;
 };
@@ -21,10 +28,39 @@ const GOAL_FIELD: Partial<Record<ConversationGoal, keyof QualificationFields>> =
   discover_problem: "business_problem",
   discover_current_process: "current_process",
   discover_desired_outcome: "desired_outcome",
-  discover_urgency: "urgency",
+  discover_urgency: "frequency",
   discover_authority: "decision_authority",
   discover_contact: "email",
+  interpret_industry: "business_problem",
+  interpret_workflow: "business_problem",
+  reflect_opportunity: "desired_outcome",
 };
+
+/**
+ * Concrete probes about individual stages of the known workflow. These give the
+ * assistant somewhere useful to go when the standard questions are exhausted —
+ * for example when a visitor repeats the same one-word answer.
+ */
+function workflowStageProbes(q: QualificationFields): (string | null)[] {
+  const workflow = workflowByKey(q.workflow);
+  if (!workflow) return [];
+  return workflow.drains.map((stage) => `Is ${stage} the part that costs you most?`);
+}
+
+/**
+ * The domain-specific question for an interpretation goal. Returns null when the
+ * goal is not interpretive, so the generic field question is used instead.
+ */
+function interpretiveQuestion(goal: ConversationGoal, q: QualificationFields): string | null {
+  const workflow = workflowByKey(q.workflow);
+  const industry = industryByKey(q.industry);
+  if (goal === "interpret_workflow" && workflow) return workflowOrientation(workflow, industry).question;
+  if (goal === "interpret_industry" && industry) return industryOrientation(industry).question;
+  if (goal === "reflect_opportunity") return "Does that match how it actually works in your business?";
+  if (goal === "discover_current_process") return "How does that work today, step by step?";
+  if (goal === "discover_urgency") return "How often does that happen — and roughly what does it cost you when it does?";
+  return null;
+}
 
 function earliestRelevantMissing(q: QualificationFields): keyof QualificationFields | null {
   if (!q.business_type && !q.industry) return "industry";
@@ -91,12 +127,29 @@ export function createResponsePlan(
   else if (primary === "decline_unsupported_request" && classification.intent === "unknown") action = "mark_out_of_scope";
   else if (primary === "discover_contact" && q.email) action = "create_lead";
 
+  // Question selection, in priority order, skipping anything already asked:
+  //   1. the interpretive (domain-specific) question for this goal
+  //   2. the generic question for the planned field
+  //   3. a probe about a specific stage of the known workflow
+  // Step 3 exists so a visitor who repeats themselves still gets a NEW, concrete
+  // question rather than the same one echoed back.
+  const asked = (text: string | null) =>
+    Boolean(text) && previousReceptionistReplies.some((reply) => reply.includes(text as string));
+
+  const candidates = [
+    interpretiveQuestion(primary, q),
+    questionForField(questionField),
+    ...workflowStageProbes(q),
+  ];
+  const questionText = candidates.find((c) => c && !asked(c)) ?? null;
+
   return {
     primary_goal: primary,
     direct_answer_required: directAnswerRequired,
     knowledge_ids: retrieval.facts.map((f) => f.id),
     context_purpose: contextPurpose,
     question_field: questionField,
+    question_text: questionText,
     proposed_action: action,
     expected_progress: goal.expected_state_change,
   };

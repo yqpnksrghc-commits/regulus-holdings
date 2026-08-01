@@ -92,7 +92,8 @@ const scenarios: Scenario[] = [
     name: "several qualification fields at once",
     turns: ["I'm Ada, I run a dental clinic with 12 staff. We miss calls after hours and want faster follow-up this month. Email me at ada@clinic.ca."],
     expect: (r) => {
-      assert.equal(r.qualification.industry, "dental");
+      // Normalized domain-knowledge key, not the raw matched word.
+      assert.equal(r.qualification.industry, "clinic");
       assert.equal(r.qualification.email, "ada@clinic.ca");
     },
   },

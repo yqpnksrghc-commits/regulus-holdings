@@ -7,6 +7,28 @@
  * never write a field the deterministic layer would reject. Unknown stays null.
  */
 import type { ConfidenceByField, OfferedSlot, QualificationFields } from "@/lib/receptionist/schema";
+import { recognizeIndustry, recognizeWorkflow } from "@/lib/receptionist/domain-knowledge";
+
+/** Visitor role, when stated. Drives who the brief is addressed to. */
+const ROLE_RE = /\b(owner|founder|director|principal|partner|manager|supervisor|foreman|administrator|admin|office manager|operations|controller|bookkeeper|receptionist|practice manager|ceo|coo|cfo)\b/i;
+
+/** How often the friction happens. Captured verbatim so the brief stays faithful. */
+const FREQUENCY_RE = /\b(?:every|each)\s+(?:day|week|month|payroll|pay period|morning|shift)\b|\b(?:daily|weekly|biweekly|bi-weekly|monthly|constantly|all the time|every time)\b|\b\d{1,4}\s*(?:x|times)?\s*(?:a|per)\s*(?:day|week|month)\b|\b\d{1,4}\s+(?:a|per)\s+(?:day|week|month)\b/i;
+
+/** How many people touch the workflow. */
+const PEOPLE_RE = /\b(?:just\s+)?(?:me|myself)\b|\b(\d{1,4})\s+(?:people|employees|staff|guys|crew|techs?|admins?|office staff)\b|\b(?:team of|crew of)\s+(\d{1,4})\b/i;
+
+/** Named tools/systems. Only well-known, unambiguous names are captured. */
+const TOOL_RE = /\b(quickbooks|qbo|sage|xero|adp|ceridian|payworks|wagepoint|excel|spreadsheets?|google sheets|paper|whatsapp|texts?|jobber|servicetitan|housecall pro|buildertrend|procore|salesforce|hubspot|dentrix|abeldent|jane|cliniko|shopify|square|outlook|gmail|calendly|acuity)\b/i;
+
+/** The stated cost of the friction. */
+const CONSEQUENCE_RE = /\b(?:lose|losing|lost|cost(?:s|ing)?|waste|wasting|takes?|spend(?:ing)?|eats?|burn(?:s|ing)?)\b[^.!?]{0,80}\b(?:hours?|days?|time|money|leads?|jobs?|customers?|clients?|patients?|revenue|\$\s?\d+)\b|\b(?:overtime|errors?|mistakes?|penalt(?:y|ies)|complaints?|no[- ]?shows?)\b/i;
+
+/** How the work is done today. */
+const PROCESS_RE = /\b(?:by hand|manually|on paper|paper|spreadsheets?|excel|paper timesheets?|we (?:use|do|have|run|enter|type|call|text|email)|i (?:use|do|have|run|enter|type|call|text|email)|currently|right now|at the moment)\b/i;
+
+/** What they want instead. */
+const OUTCOME_RE = /\b(?:want|need|hope|aiming|trying|would like)\b[^.!?]{3,140}|\b(?:so that|so we can|ideally|the goal is|end up with|get to a point)\b[^.!?]{3,140}/i;
 
 const EMAIL_RE = /[^\s@]+@[^\s@]+\.[^\s@]{2,}/;
 const PHONE_RE = /(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/;
@@ -57,18 +79,58 @@ export function extractFromVisitorText(
   if (AUTHORITY_YES_RE.test(t)) { fields.decision_authority = "yes"; confidence.decision_authority = 0.6; }
   else if (AUTHORITY_NO_RE.test(t)) { fields.decision_authority = "no"; confidence.decision_authority = 0.6; }
 
+  // Industry and workflow recognition. This is what lets a bare "Construction"
+  // or "Payroll" register as real state instead of falling through to unknown.
   if (!fields.industry) {
-    const industry = t.match(/\b(dental|medical|med spa|clinic|law|legal|accounting|professional services?|home services?)\b/i)?.[0];
-    if (industry) { fields.industry = industry.toLowerCase(); confidence.industry = 0.75; }
+    const recognized = recognizeIndustry(t);
+    if (recognized) { fields.industry = recognized.key; confidence.industry = 0.8; }
+  }
+  if (!fields.workflow) {
+    const recognized = recognizeWorkflow(t);
+    if (recognized) { fields.workflow = recognized.key; confidence.workflow = 0.8; }
+  }
+  if (!fields.visitor_role) {
+    const role = t.match(ROLE_RE)?.[0];
+    if (role) { fields.visitor_role = role.toLowerCase(); confidence.visitor_role = 0.7; }
+  }
+  if (!fields.frequency) {
+    const freq = t.match(FREQUENCY_RE)?.[0];
+    if (freq) { fields.frequency = freq.toLowerCase().slice(0, 80); confidence.frequency = 0.7; }
+  }
+  if (!fields.people_involved) {
+    const people = t.match(PEOPLE_RE)?.[0];
+    if (people) { fields.people_involved = people.toLowerCase().slice(0, 60); confidence.people_involved = 0.65; }
+  }
+  {
+    // Tools accumulate across turns; the visitor may name them a few at a time.
+    const found = new Set(fields.tools_used.map((x) => x.toLowerCase()));
+    const re = new RegExp(TOOL_RE.source, "gi");
+    for (const m of t.matchAll(re)) found.add(m[0].toLowerCase());
+    const merged = [...found].slice(0, 12);
+    if (merged.length !== fields.tools_used.length) { fields.tools_used = merged; confidence.tools_used = 0.7; }
+  }
+  if (!fields.current_process && PROCESS_RE.test(t)) {
+    fields.current_process = t.slice(0, 600);
+    confidence.current_process = 0.6;
+  }
+  if (!fields.consequence && CONSEQUENCE_RE.test(t)) {
+    fields.consequence = (t.match(CONSEQUENCE_RE)?.[0] ?? t).slice(0, 300);
+    confidence.consequence = 0.6;
+  }
+  if (!fields.desired_outcome) {
+    const outcome = t.match(OUTCOME_RE)?.[0];
+    if (outcome) { fields.desired_outcome = outcome.slice(0, 300); confidence.desired_outcome = 0.6; }
   }
   if (!fields.business_size) {
     const size = t.match(/\b(?:team of|we have|with)\s+(\d{1,5})\s+(?:people|employees|staff|locations?)\b/i)?.[0];
     if (size) { fields.business_size = size; confidence.business_size = 0.7; }
   }
-  if (!fields.business_problem && /\b(?:miss(?:ed|ing)?|lose|lost|slow|manual|after hours|bottleneck|delay|repetitive|follow-?up|fragmented|scattered|no[- ]show|problem|issue|struggl|need to improve|want to improve)\b/i.test(t)) {
+  // A named workflow IS a stated problem area — a bare "Payroll" must count as
+  // real progress, not fall through to another generic clarifying question.
+  if (!fields.business_problem && (fields.workflow || /\b(?:miss(?:ed|ing)?|lose|lost|slow|manual|after hours|bottleneck|delay|repetitive|follow-?up|fragmented|scattered|no[- ]show|problem|issue|struggl|need to improve|want to improve)\b/i.test(t))) {
     fields.business_problem = t.slice(0, 1000);
-    fields.pain_points = [t.slice(0, 300)];
-    confidence.business_problem = 0.75;
+    if (!fields.pain_points.length) fields.pain_points = [t.slice(0, 300)];
+    confidence.business_problem = fields.workflow ? 0.8 : 0.75;
   }
   if (/\b(short|brief|concise|quick answer)\b/i.test(t)) fields.preferred_communication_style = "concise";
   else if (/\b(detailed|detail|explain fully)\b/i.test(t)) fields.preferred_communication_style = "detailed";
@@ -97,7 +159,7 @@ export function reconcileModelExtraction(
   const str = (v: unknown, n: number) => (typeof v === "string" && v.trim() ? v.trim().replace(/<[^>]*>/g, "").slice(0, n) : null);
 
   // Free-text descriptive fields: accept model text (bounded) when absent.
-  for (const key of ["company_name", "business_type", "industry", "business_size", "inquiry_type", "business_problem", "current_process", "desired_outcome", "approximate_monthly_lead_volume", "approximate_staff_time_lost", "budget_signal", "visitor_name"] as const) {
+  for (const key of ["company_name", "business_type", "industry", "business_size", "inquiry_type", "business_problem", "current_process", "desired_outcome", "approximate_monthly_lead_volume", "approximate_staff_time_lost", "budget_signal", "visitor_name", "visitor_role", "workflow", "frequency", "people_involved", "consequence"] as const) {
     if (fields[key] == null) {
       const v = str(proposed[key], key === "business_problem" || key === "current_process" || key === "desired_outcome" ? 1000 : 160);
       if (v) { (fields[key] as string | null) = v; confidence[key] = 0.5; }

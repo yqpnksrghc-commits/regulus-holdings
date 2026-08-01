@@ -45,7 +45,8 @@ export class DeterministicModel implements ReceptionistModel {
     const orgMatch = text.match(/\b(?:i (?:run|own)|we're|at|for|my (?:business|company|clinic|firm|practice) is)\s+([A-Z][\w &'-]{2,40})/);
     if (orgMatch) baseExtraction.company_name = orgMatch[1].trim();
 
-    const draft = draftConsultativeResponse(classification, retrieval, qualification, plan);
+    const previousReplies = transcript.filter((t) => t.role === "receptionist").map((t) => t.text);
+    const draft = draftConsultativeResponse(classification, retrieval, qualification, plan, text, previousReplies);
     let reply = draft.reply;
     if (/\b(password|credit card|card number|sin|social insurance|ssn)\b/i.test(text)) {
       reply = `${PRIVACY_NOTE}\n\n${reply}`;

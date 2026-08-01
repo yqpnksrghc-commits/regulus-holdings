@@ -123,7 +123,9 @@ test("conversation memory updates and avoids the same qualification question", a
   assert.ok(record.qualification.questions_answered.includes("services"));
 
   const second = await processVisitorTurn(record, "We run a dental clinic.", model, { now: NOW });
-  assert.equal(second.record.qualification.industry, "dental");
+  // Industry is now stored as a normalized domain-knowledge key ("clinic")
+  // rather than the raw matched word, so it can drive workflow orientation.
+  assert.equal(second.record.qualification.industry, "clinic");
   assert.doesNotMatch(second.reply, /What industry/i);
   assert.equal((second.reply.match(/\?/g) || []).length, 1);
 });

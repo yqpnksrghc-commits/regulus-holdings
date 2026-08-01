@@ -53,10 +53,28 @@ export type QualificationFields = {
   phone: string | null;
   preferred_contact_method: "email" | "phone" | null;
   inquiry_type: string | null;
+  /** Recognized visitor role (owner, manager, admin, …) when stated. */
+  visitor_role: string | null;
+  /** Recognized workflow key from domain-knowledge.ts, e.g. "payroll_admin". */
+  workflow: string | null;
   business_problem: string | null;
   pain_points: string[];
   current_process: string | null;
+  /** How often the friction occurs, in the visitor's own terms. */
+  frequency: string | null;
+  /** How many people touch the workflow. */
+  people_involved: string | null;
+  /** Tools/systems named by the visitor. */
+  tools_used: string[];
+  /** What the friction costs — the stated consequence. */
+  consequence: string | null;
   desired_outcome: string | null;
+  /** The assistant's hypothesis about the automation opportunity. */
+  automation_hypothesis: string | null;
+  /** Confidence in that hypothesis. Never "high" without human verification. */
+  hypothesis_confidence: "low" | "medium" | null;
+  /** What a person must still verify before recommending anything. */
+  missing_evidence: string[];
   goals: string[];
   urgency: "low" | "medium" | "high" | null;
   approximate_monthly_lead_volume: string | null;
@@ -87,10 +105,19 @@ export function emptyQualification(): QualificationFields {
     phone: null,
     preferred_contact_method: null,
     inquiry_type: null,
+    visitor_role: null,
+    workflow: null,
     business_problem: null,
     pain_points: [],
     current_process: null,
+    frequency: null,
+    people_involved: null,
+    tools_used: [],
+    consequence: null,
     desired_outcome: null,
+    automation_hypothesis: null,
+    hypothesis_confidence: null,
+    missing_evidence: [],
     goals: [],
     urgency: null,
     approximate_monthly_lead_volume: null,
@@ -174,6 +201,7 @@ export type ConversationRecord = {
       knowledge_ids: string[];
       context_purpose: string;
       question_field: string | null;
+      question_text: string | null;
       proposed_action: string;
       expected_progress: string;
     };

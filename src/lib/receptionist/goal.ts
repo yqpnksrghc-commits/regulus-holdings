@@ -1,10 +1,17 @@
 import type { ConversationState, QualificationFields } from "@/lib/receptionist/schema";
 import type { IntentClassification } from "@/lib/receptionist/intent";
+import { industryByKey, workflowByKey } from "@/lib/receptionist/domain-knowledge";
 
 export const CONVERSATION_GOALS = [
   "answer_question",
   "clarify_request",
   "establish_relevance",
+  /** Reflect an industry's typical workflow chain and narrow to one stage. */
+  "interpret_industry",
+  /** Reflect how a named workflow typically consumes time, then discriminate. */
+  "interpret_workflow",
+  /** Phase 4: what is understood / where automation may help / what needs verifying / first step. */
+  "reflect_opportunity",
   "discover_business_type",
   "discover_industry",
   "discover_workflow",
@@ -42,13 +49,24 @@ export type GoalSelectionInput = {
   classification: IntentClassification;
   qualification: QualificationFields;
   visitorFlags: string[];
+  /** Prior receptionist replies — used to guarantee nothing is said twice. */
+  previousReplies?: string[];
 };
 
 const DIRECT_QUESTION = /\?|^(who|what|when|where|why|how|can|could|do|does|is|are|will|would|should)\b/i;
 const BUSINESS_RELEVANT = new Set([
   "company_overview", "services", "industries", "pricing", "booking",
-  "technical_question", "implementation", "unknown",
+  "technical_question", "implementation", "workflow_topic", "unknown",
 ]);
+
+/**
+ * Has the assistant already given the opportunity reflection? It is offered once,
+ * after enough is known — repeating it would be the same boilerplate failure in
+ * a new costume.
+ */
+function alreadyReflected(previousReplies: string[]): boolean {
+  return previousReplies.some((r) => r.includes("What I understand:"));
+}
 
 function result(
   selected_goal: ConversationGoal,
@@ -102,11 +120,32 @@ export function selectConversationGoal(input: GoalSelectionInput): ConversationG
     return result("close_gracefully", "No safe or relevant commercial progression is available.", 0.8, ["offer_booking"], [], `Conversation remains in ${state}.`);
   }
 
-  if (!q.business_type && !q.industry) return result("discover_industry", "Industry is the earliest relevant missing context.", 0.88, [], ["industry"], "Industry becomes known.");
+  // Interpretation comes before interrogation. Reflecting a recognized workflow
+  // or industry back to the visitor is where they get value; it also proves the
+  // assistant understood them, which a generic question never does.
+  const workflow = workflowByKey(q.workflow);
+  const industry = industryByKey(q.industry);
+  const prior = input.previousReplies ?? [];
+  const said = (needle: string) => needle.length > 0 && prior.some((r) => r.includes(needle));
+
+  if (workflow && !said(workflow.discriminator)) {
+    return result("interpret_workflow", `Visitor named the ${workflow.label} workflow; reflecting the pattern is more useful than another generic question.`, 0.93, [], ["business_problem"], "Visitor narrows the workflow to a specific stage.");
+  }
+  if (industry && !workflow && !said("creates the most repeated work")) {
+    return result("interpret_industry", `Visitor named an industry (${industry.label}); orienting on its typical workflow chain narrows the problem.`, 0.91, [], ["business_problem"], "Visitor selects the workflow that costs them most.");
+  }
+  if (!q.business_type && !q.industry && !q.workflow) return result("discover_industry", "Industry is the earliest relevant missing context.", 0.88, [], ["industry"], "Industry becomes known.");
   if (!q.business_problem && !q.current_process) return result("discover_workflow", "A concrete workflow or operational problem is needed.", 0.9, [], ["business_problem"], "Workflow or problem becomes known.");
+  if (!q.current_process) return result("discover_current_process", "How the workflow runs today is required before any opportunity can be described.", 0.9, [], ["current_process"], "Current process becomes known.");
+  if (!q.frequency && !q.consequence) return result("discover_urgency", "Frequency or consequence sizes the problem.", 0.86, [], ["frequency"], "Frequency or consequence becomes known.");
+
+  // Enough is known to say something genuinely useful — do that once, before
+  // asking for contact details.
+  if (workflow && !alreadyReflected(prior)) {
+    return result("reflect_opportunity", "Enough evidence exists to describe a plausible opportunity, its uncertainty, and a contained first step.", 0.92, [], ["business_problem", "current_process"], "Visitor receives a usable opportunity reflection.");
+  }
+
   if (!q.desired_outcome) return result("discover_desired_outcome", "Desired outcome is the next useful qualification distinction.", 0.86, [], ["desired_outcome"], "Desired outcome becomes known.");
-  if (!q.urgency) return result("discover_urgency", "Timing is relevant after the problem and outcome are known.", 0.82, [], ["urgency"], "Urgency becomes known.");
-  if (q.decision_authority == null) return result("discover_authority", "Decision involvement is relevant after need and timing.", 0.78, [], ["decision_authority"], "Decision path becomes known.");
   if (!q.email) return result("discover_contact", "A useful opportunity is established and a follow-up route is missing.", 0.9, [], ["email"], "Contact route becomes known.");
   return result("offer_booking", "Relevance and qualification are sufficient for a discovery call.", 0.9, [], ["email"], "Move toward verified availability.");
 }

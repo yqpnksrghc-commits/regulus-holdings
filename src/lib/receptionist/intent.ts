@@ -1,3 +1,5 @@
+import { recognizeIndustry, recognizeWorkflow } from "@/lib/receptionist/domain-knowledge";
+
 export const RECEPTIONIST_INTENTS = [
   "company_overview",
   "services",
@@ -12,6 +14,8 @@ export const RECEPTIONIST_INTENTS = [
   "privacy",
   "ai_disclosure",
   "contact",
+  /** Visitor named a business function/workflow (payroll, quoting, scheduling…). */
+  "workflow_topic",
   "unknown",
 ] as const;
 
@@ -41,7 +45,15 @@ const RULES: { intent: ReceptionistIntent; pattern: RegExp; weight: number }[] =
 
 export function classifyIntent(text: string): IntentClassification {
   const matches = RULES.filter((r) => r.pattern.test(text)).sort((a, b) => b.weight - a.weight);
-  if (!matches.length) return { intent: "unknown", confidence: 0.35, secondary_intents: [] };
+  if (!matches.length) {
+    // Before giving up, check the domain vocabulary. A bare "Construction" or
+    // "Payroll" is a real, actionable signal — not an unknown request.
+    const workflow = recognizeWorkflow(text);
+    if (workflow) return { intent: "workflow_topic", confidence: 0.85, secondary_intents: [] };
+    const industry = recognizeIndustry(text);
+    if (industry) return { intent: "industries", confidence: 0.85, secondary_intents: [] };
+    return { intent: "unknown", confidence: 0.35, secondary_intents: [] };
+  }
   const unique = [...new Set(matches.map((m) => m.intent))];
   const primary = unique[0];
   return {
