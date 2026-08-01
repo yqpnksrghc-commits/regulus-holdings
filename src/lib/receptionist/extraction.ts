@@ -117,7 +117,9 @@ export function extractFromVisitorText(
     fields.consequence = (t.match(CONSEQUENCE_RE)?.[0] ?? t).slice(0, 300);
     confidence.consequence = 0.6;
   }
-  if (!fields.desired_outcome) {
+  // "I want to speak to a person" is a routing request, not a business outcome —
+  // capturing it would put a misleading line in the lead brief.
+  if (!fields.desired_outcome && !HUMAN_RE.test(t)) {
     const outcome = t.match(OUTCOME_RE)?.[0];
     if (outcome) { fields.desired_outcome = outcome.slice(0, 300); confidence.desired_outcome = 0.6; }
   }

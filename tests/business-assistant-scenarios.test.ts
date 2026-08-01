@@ -204,6 +204,9 @@ test("14b. human handoff confirms rather than repeating the offer", async () => 
   assert.match(ran.replies[1], /everything the Regulus team needs|follow up by email/i);
   assert.equal(ran.record.state, "HUMAN_REQUESTED");
   assert.equal(ran.effects[1].kind, "create_lead");
+  // A routing request is not a business outcome; it must not pollute the brief.
+  assert.equal(ran.record.qualification.desired_outcome, null);
+  assert.match(buildLeadBrief(ran.record), /Desired outcome: not stated/);
 });
 
 test("15. visitor provides contact details early", async () => {
