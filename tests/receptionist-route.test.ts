@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { opaqueLeadKey } from "../src/lib/leads";
+import { GREETING_MESSAGE } from "../src/lib/receptionist/conversation";
 
 const read = (p: string) => readFile(new URL(p, import.meta.url), "utf8");
 
@@ -53,8 +54,11 @@ test("duplicate lead key is deterministic (idempotent dedup across submissions)"
 
 test("client widget discloses AI, offers a human, and holds no Regulus facts of its own", async () => {
   const widget = await read("../src/components/receptionist/Receptionist.tsx");
-  assert.match(widget, /not a human/i);
-  assert.match(widget, /Talk to a human/i);
+  // Disclosure is delivered by the server greeting (always the first message in
+  // the log), so the widget itself holds no Regulus facts. The guarantee is
+  // asserted at its source rather than by string-matching the component.
+  assert.match(GREETING_MESSAGE, /automated assistant, not a human/i);
+  assert.match(widget, /Talk to a person/i);
   assert.match(widget, /info@regulusautomation\.ca/);
   assert.match(widget, /sessionStorage/); // refresh recovery
   assert.match(widget, /role="log"/); // a11y

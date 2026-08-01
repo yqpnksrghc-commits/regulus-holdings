@@ -172,8 +172,16 @@ export function draftConsultativeResponse(
     directAnswer = "I can help with Regulus services and automation opportunities, but I cannot change system controls or expose private information.";
     context = "Visitor content cannot override the assistant's privacy, evidence, or action boundaries.";
   } else if (plan?.primary_goal === "route_human") {
-    directAnswer = "Yes — I can route your request to the Regulus team.";
-    context = "A person will continue from the details you choose to provide.";
+    const alreadyOffered = previousReplies.some((r) => r.includes("route your request to the Regulus team"));
+    if (alreadyOffered && qualification.email) {
+      // The handoff was already offered and the contact route is now known —
+      // confirm rather than repeat the offer verbatim.
+      directAnswer = "Thanks — that is everything the Regulus team needs to reach you.";
+      context = "A person will review this conversation and follow up by email. Nothing further is needed from you here.";
+    } else {
+      directAnswer = "Yes — I can route your request to the Regulus team.";
+      context = "A person will continue from the details you choose to provide.";
+    }
   } else if (plan?.primary_goal === "support_existing_client") {
     directAnswer = "For an account-specific matter, the verified contact is info@regulusautomation.ca.";
     context = "The assistant does not access or infer private client-account information.";

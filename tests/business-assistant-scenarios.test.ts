@@ -195,6 +195,17 @@ test("14. visitor wants a human immediately", async () => {
   assert.equal(ran.record.state, "CONTACT_CAPTURE");
 });
 
+test("14b. human handoff confirms rather than repeating the offer", async () => {
+  const ran = await run("s14b", ["I want to speak to a person", "ada@northline.ca"]);
+  assertBaseline(ran, "s14b");
+  assert.match(ran.replies[0], /route your request/i);
+  // The second turn must confirm, not echo the same offer back.
+  assert.doesNotMatch(ran.replies[1], /route your request/i);
+  assert.match(ran.replies[1], /everything the Regulus team needs|follow up by email/i);
+  assert.equal(ran.record.state, "HUMAN_REQUESTED");
+  assert.equal(ran.effects[1].kind, "create_lead");
+});
+
 test("15. visitor provides contact details early", async () => {
   const ran = await run("s15", ["I'm Ada from Northline Roofing, ada@northline.ca", "Scheduling"]);
   assertBaseline(ran, "s15");
