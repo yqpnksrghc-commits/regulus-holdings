@@ -36,7 +36,7 @@ test("commercial architecture questions route to their approved knowledge", () =
     ["What is the larger Regulus Automation vision?", "company_overview"],
     ["How does Regulus Business Systems fit within Regulus Automation?", "company_overview"],
     ["Do you work with home-service businesses?", "industries"],
-    ["Is the Time and Workflow Recovery Audit free?", "pricing"],
+    ["How much is the Automation Opportunity Audit?", "pricing"],
   ] as const;
   for (const [question, intent] of cases) assert.equal(classifyIntent(question).intent, intent, question);
 });
@@ -57,13 +57,17 @@ test("receptionist preserves the corporate and Business Systems relationship", (
   assert.match(answer, /operational intelligence, products, discovery, and research/i);
 });
 
-test("receptionist quotes the free audit and optional typical ranges without legacy pricing", () => {
+test("receptionist quotes the CAD $500 prepaid audit and optional ranges, never the retired free offer", () => {
   const answer = groundedAnswer("pricing") ?? "";
-  assert.match(answer, /Free Time & Workflow Recovery Audit is CAD \$0/i);
+  assert.match(answer, /Automation Opportunity Audit is CAD \$500, prepaid/i);
   assert.match(answer, /typically CAD \$2,500–\$5,000/i);
   assert.match(answer, /typically CAD \$750–\$1,500 per month/i);
   assert.match(answer, /optional/i);
-  assert.doesNotMatch(answer, /CAD \$500|prepaid/i);
+  // The retired free offer must never reappear in a quoted price.
+  assert.doesNotMatch(answer, /CAD \$0|\bfree\b/i);
+  // The site takes no payment; the assistant may only promise a payment link.
+  assert.match(answer, /secure payment link/i);
+  assert.doesNotMatch(answer, /payment (?:has been )?(?:received|collected|processed)/i);
 });
 
 test("receptionist organizes Business Systems around the three offer families", () => {

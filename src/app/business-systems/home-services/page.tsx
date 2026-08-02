@@ -30,7 +30,7 @@ export default function HomeServicesPage() {
         breadcrumbJsonLd([{name:"Home",path:"/"},{name:"Business Systems",path:"/business-systems"},{name:"Home Services",path}]),
       ])}} />
       <PageHero eyebrow="Regulus Business Systems · Home Services" title="Recover time and missed opportunities without losing control." lead="Practical lead capture and workflow recovery for water-treatment companies, HVAC contractors, plumbing businesses, roofing companies, and similar owner-operated field-service businesses.">
-        <Button href="/free-audit" size="lg" className="group" data-analytics-event="free_audit_cta">Start the free audit <Arrow /></Button>
+        <Button href="/audit" size="lg" className="group" data-analytics-event="audit_cta">Start the Audit <Arrow /></Button>
       </PageHero>
       <Section>
         <SectionHeading eyebrow="The operating reality" title="Important work should not wait for the owner to find it." />
@@ -50,8 +50,8 @@ export default function HomeServicesPage() {
       </Section>
       <Section tone="panel">
         <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-center">
-          <SectionHeading eyebrow="Start with evidence" title="Free Time & Workflow Recovery Audit — CAD $0" lead="A bounded review identifies work taking too much time, being missed, or waiting too long; fragmented inquiry channels; follow-up gaps; and practical automation opportunities. You receive a prioritized recommendation. Implementation is not included." />
-          <div className="lg:justify-self-end"><Button href="/free-audit" size="lg" className="group" data-analytics-event="free_audit_cta">Request the free audit <Arrow /></Button></div>
+          <SectionHeading eyebrow="Start with evidence" title="Automation Opportunity Audit — CAD $500, prepaid" lead="A bounded review identifies work taking too much time, being missed, or waiting too long; fragmented inquiry channels; follow-up gaps; and practical automation opportunities. You receive a prioritized recommendation. Implementation is not included." />
+          <div className="lg:justify-self-end"><Button href="/audit" size="lg" className="group" data-analytics-event="audit_cta">Request the Audit <Arrow /></Button></div>
         </div>
       </Section>
     </div>

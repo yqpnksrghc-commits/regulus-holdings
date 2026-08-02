@@ -20,7 +20,7 @@ export default function ProfessionalPage() {
       <p className="mt-5 text-ink-soft">The first useful automation is usually not a wholesale replacement. It is a clearly measured workflow where repetitive handling, delayed handoffs, or fragmented context can be reduced while exceptions remain visible to the responsible professional.</p>
       <h2 className="mt-10 text-h2">What an assessment considers</h2>
       <ul className="mt-5 space-y-3 text-ink-soft"><li>• Repeated data entry and document classification</li><li>• Client-response and follow-up ownership</li><li>• Work waiting in inboxes or disconnected tools</li><li>• Knowledge that is difficult to locate at the point of decision</li><li>• Exceptions requiring professional judgment</li></ul>
-      <Button href="/free-audit" className="mt-8" data-analytics-event="free_audit_cta">Request the Free Time &amp; Workflow Recovery Audit</Button>
+      <Button href="/audit" className="mt-8" data-analytics-event="audit_cta">Request the Automation Opportunity Audit</Button>
     </div></Section>
   </>;
 }

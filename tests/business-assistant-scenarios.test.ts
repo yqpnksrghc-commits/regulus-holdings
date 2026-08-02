@@ -177,11 +177,17 @@ test("13. visitor asks price and gets only approved pricing", async () => {
   const ran = await run("s13", ["How much does it cost?"]);
   assertBaseline(ran, "s13");
   assert.equal(ran.record.response_intelligence?.intent, "pricing");
-  assert.match(ran.replies[0], /CAD \$0|Free/i);
+  assert.match(ran.replies[0], /CAD \$500, prepaid/i);
+  // The retired free offer must never be quoted again.
+  assert.doesNotMatch(ran.replies[0], /CAD \$0|\bfree\b/i);
+  // No payment is taken on the site — only a link may be promised.
+  assert.match(ran.replies[0], /secure payment link/i);
+  assert.doesNotMatch(ran.replies[0], /payment (?:has been )?(?:received|collected|processed)/i);
   // Only the approved figures may appear. Every currency amount in the reply
   // must be one the approved pricing knowledge actually contains.
-  const APPROVED_AMOUNTS = new Set(["$0", "$2,500", "$5,000", "$750", "$1,500"]);
-  for (const amount of ran.replies[0].match(/\$\s?[\d,]+/g) ?? []) {
+  const APPROVED_AMOUNTS = new Set(["$500", "$2,500", "$5,000", "$750", "$1,500"]);
+  // Thousands separators only — a trailing sentence comma is not part of the amount.
+  for (const amount of ran.replies[0].match(/\$\s?\d{1,3}(?:,\d{3})*/g) ?? []) {
     assert.ok(APPROVED_AMOUNTS.has(amount.replace(/\s/g, "")), `unapproved price quoted: ${amount}`);
   }
 });

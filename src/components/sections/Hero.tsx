@@ -57,8 +57,8 @@ export function Hero() {
             <Button href="/business-systems" size="lg" className="group" data-analytics-event="business_systems_cta">
               Explore Business Systems <Arrow />
             </Button>
-            <Button href="/free-audit" variant="secondary" size="lg" data-analytics-event="free_audit_cta">
-              Start the Free Audit
+            <Button href="/audit" variant="secondary" size="lg" data-analytics-event="audit_cta">
+              Start the Audit
             </Button>
           </motion.div>
 

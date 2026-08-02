@@ -118,7 +118,7 @@ export function ContactForm({ audit = false }: { audit?: boolean }) {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button type="submit" size="lg" disabled={submitting || sent} data-analytics-event={audit ? "audit_form_submission" : "contact_form_submission"}>
-          {submitting ? "Sending…" : sent ? "Message received" : audit ? "Request free audit" : "Send message"}
+          {submitting ? "Sending…" : sent ? "Message received" : audit ? "Request the audit" : "Send message"}
         </Button>
         <p id="form-note" className="text-xs text-dim" role={sent ? "status" : undefined}>
           {sent ? "Thank you. Your message is securely recorded for review." : "Your message is submitted securely to Regulus for review."}

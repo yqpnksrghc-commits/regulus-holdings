@@ -43,11 +43,12 @@ const FACTS: Record<Exclude<ReceptionistIntent, "unknown">, KnowledgeFact[]> = {
   // vocabulary in domain-knowledge.ts; these facts ground the offer and process
   // boundary that accompanies it.
   workflow_topic: [
-    { id: "process.discovery", text: APPROVED_DISCOVERY, source: "src/app/free-audit/page.tsx" },
+    { id: "process.discovery", text: APPROVED_DISCOVERY, source: "src/app/audit/page.tsx" },
     { id: "company.audience", text: APPROVED_AUDIENCE, source: "src/lib/site.ts + industry pages" },
   ],
   pricing: [
-    { id: "pricing.free_audit", text: APPROVED_PRICING.free_audit, source: "src/app/free-audit/page.tsx" },
+    { id: "pricing.audit", text: APPROVED_PRICING.audit, source: "src/app/audit/page.tsx" },
+    { id: "pricing.payment", text: APPROVED_PRICING.payment, source: "src/app/audit/page.tsx" },
     { id: "pricing.implementation", text: APPROVED_PRICING.implementation, source: "src/lib/commercial-services.ts" },
     { id: "pricing.management", text: APPROVED_PRICING.management, source: "src/lib/commercial-services.ts" },
     { id: "pricing.boundary", text: APPROVED_PRICING.note, source: "src/lib/commercial-services.ts" },
@@ -60,7 +61,7 @@ const FACTS: Record<Exclude<ReceptionistIntent, "unknown">, KnowledgeFact[]> = {
   })),
   implementation: [
     { id: "process.discovery", text: APPROVED_DISCOVERY, source: "src/app/contact/page.tsx" },
-    { id: "implementation.boundary", text: "The free audit is separate from optional paid implementation and optional ongoing management.", source: "src/lib/commercial-services.ts" },
+    { id: "implementation.boundary", text: "The CAD $500 audit is separate from optional paid implementation and optional ongoing management, each priced separately.", source: "src/lib/commercial-services.ts" },
   ],
   support: [{ id: "company.contact", text: `Regulus can be reached at ${COMPANY_FACTS.email}.`, source: "src/lib/site.ts" }],
   existing_client: [{ id: "company.contact", text: `Regulus can be reached at ${COMPANY_FACTS.email}.`, source: "src/lib/site.ts" }],

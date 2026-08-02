@@ -84,11 +84,15 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
     itemListElement:items.map((item,index)=>({"@type":"ListItem",position:index+1,name:item.name,item:`${site.url}${item.path}`})) };
 }
 
-export function serviceJsonLd(input:{name:string;description:string;path:string;audience?:string}) {
+export function serviceJsonLd(input:{name:string;description:string;path:string;audience?:string;price?:string;priceCurrency?:string}) {
   return {"@context":"https://schema.org","@type":"Service",name:input.name,description:input.description,
     url:`${site.url}${input.path}`,provider:{"@type":"Organization",name:site.name,url:site.url},
     areaServed:["Toronto","Greater Toronto Area","Ontario"],serviceType:input.name,
-    ...(input.audience?{audience:{"@type":"Audience",audienceType:input.audience}}:{})};
+    ...(input.audience?{audience:{"@type":"Audience",audienceType:input.audience}}:{}),
+    // A priced service publishes its price, so structured data cannot disagree
+    // with the page. Omitted entirely when no price applies.
+    ...(input.price&&input.priceCurrency?{offers:{"@type":"Offer",price:input.price,priceCurrency:input.priceCurrency,
+      availability:"https://schema.org/InStock",url:`${site.url}${input.path}`}}:{})};
 }
 
 export function articleJsonLd(input:{headline:string;description:string;path:string;published:string;modified:string}) {

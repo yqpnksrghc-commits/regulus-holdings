@@ -293,7 +293,10 @@ export function opportunityReflection(input: {
     understand: `What I understand: you run ${who} and ${series(known)}.`,
     opportunity: `Where automation may help: ${workflow.safeExamples[0]}. ${workflow.contraindication}`,
     verify: `What still needs verification: ${workflow.verification}. I have not seen your systems, so this is a hypothesis rather than a finding.`,
-    step: `A sensible first step: a contained review of just this one workflow — not a broad transformation — so the opportunity is either confirmed with evidence or ruled out cheaply.`,
+    // Two distinct next steps, priced honestly. The free conversation is named
+    // first so the paid audit never reads as the only way forward, and the
+    // payment mechanism is stated plainly: a link is sent, nothing is charged here.
+    step: `A sensible first step: either a short conversation with a Regulus team member, which costs nothing and carries no obligation, or the Automation Opportunity Audit — a CAD $500 prepaid contained review of just this one workflow, not a broad transformation. Payment is not taken here; a person confirms the scope and sends a secure payment link.`,
     confidence,
   };
 }

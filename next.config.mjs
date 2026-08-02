@@ -10,7 +10,15 @@ const nextConfig = {
     return [
       {
         source: "/automation/value-leakage-audit",
-        destination: "/free-audit",
+        destination: "/audit",
+        permanent: true,
+      },
+      {
+        // The audit is now CAD $500, so a "/free-audit" URL would contradict the
+        // offer. The old path is kept as a permanent redirect so existing inbound
+        // links, indexed pages, and printed references still resolve.
+        source: "/free-audit",
+        destination: "/audit",
         permanent: true,
       },
     ];

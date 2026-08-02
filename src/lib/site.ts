@@ -63,7 +63,7 @@ export const footerNav: { title: string; items: NavItem[] }[] = [
   {
     title: "Engage",
     items: [
-      { label: "Free Time & Workflow Recovery Audit", href: "/free-audit" },
+      { label: "Automation Opportunity Audit", href: "/audit" },
       { label: "Industries", href: "/industries" },
       { label: "Insights", href: "/insights" },
       { label: "Evidence over assumptions", href: "/philosophy#evidence" },

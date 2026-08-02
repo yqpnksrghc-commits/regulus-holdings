@@ -31,13 +31,13 @@ export default function AutomationPage() {
           ))}
         </div>
         <div className="mt-12 rounded-3xl border border-gold/30 bg-panel p-8 text-center">
-          <h2 className="text-h2">Start with the Free Time &amp; Workflow Recovery Audit.</h2>
+          <h2 className="text-h2">Start with the Automation Opportunity Audit.</h2>
           <p className="mx-auto mt-3 max-w-2xl text-ink-soft">
-            Tell us what is taking too much time, being missed, or waiting too long. The CAD $0 audit
+            Tell us what is taking too much time, being missed, or waiting too long. The CAD $500 prepaid audit
             provides a prioritized recommendation; implementation and ongoing management remain optional.
           </p>
-          <Button href="/free-audit" size="lg" className="mt-6" data-analytics-event="free_audit_cta">
-            Request the Free Audit
+          <Button href="/audit" size="lg" className="mt-6" data-analytics-event="audit_cta">
+            Request the Audit
           </Button>
         </div>
       </Section>

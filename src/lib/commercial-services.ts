@@ -1,8 +1,8 @@
 export const commercialServices = [
   {
     slug: "automation-opportunity-audit",
-    name: "Free Time & Workflow Recovery Audit",
-    description: "A CAD $0 bounded review of work taking too much time, being missed, or waiting too long, with a prioritized recommendation.",
+    name: "Automation Opportunity Audit",
+    description: "A CAD $500 prepaid bounded review of work taking too much time, being missed, or waiting too long, with a prioritized recommendation.",
     problem: "Growing businesses often feel the cost of missed inquiries and manual work before they can locate or prioritize the underlying workflow.",
     outcome: "A prioritized recommendation separating observations, assumptions, unknowns, follow-up gaps, and practical automation opportunities. Implementation is separate and optional.",
     measures: ["work taking too much time", "work being missed or delayed", "fragmented inquiry and follow-up paths"],
@@ -87,8 +87,8 @@ export const businessSystemsOffers = [
 
 export const engagementModel = [
   {
-    name: "Free audit — CAD $0",
-    description: "A bounded review of the current workflow and likely automation opportunities.",
+    name: "Automation Opportunity Audit — CAD $500, prepaid",
+    description: "A bounded review of the current workflow and likely automation opportunities. Paid in advance; a Regulus team member confirms scope and sends a secure payment link before the review begins.",
   },
   {
     name: "Implementation — typically CAD $2,500–$5,000",

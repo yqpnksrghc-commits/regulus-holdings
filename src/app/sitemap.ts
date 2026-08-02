@@ -4,7 +4,7 @@ import { intelligenceDomains } from "@/lib/platform";
 import { commercialServices } from "@/lib/commercial-services";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = ["", "/business-systems", "/business-systems/home-services", "/free-audit",
+  const routes = ["", "/business-systems", "/business-systems/home-services", "/audit",
     "/automation", "/industries", "/industries/medical-dental-clinics",
     "/industries/professional-services", "/insights", "/insights/how-to-identify-workflows-worth-automating",
     "/insights/where-clinics-lose-administrative-time", "/solutions", "/discovery", "/research",

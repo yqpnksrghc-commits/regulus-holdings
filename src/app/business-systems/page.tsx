@@ -28,7 +28,7 @@ export default function BusinessSystemsPage() {
         lead="Practical automation and operational systems for small and medium-sized businesses—built around recovered time, faster response, fewer missed opportunities, and clearer control."
       >
         <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-          <Button href="/free-audit" size="lg" className="group" data-analytics-event="free_audit_cta">Start the free audit <Arrow /></Button>
+          <Button href="/audit" size="lg" className="group" data-analytics-event="audit_cta">Start the Audit <Arrow /></Button>
           <Button href="/business-systems/home-services" size="lg" variant="secondary" data-analytics-event="home_services_cta">For home-service businesses</Button>
         </div>
       </PageHero>
@@ -75,9 +75,9 @@ export default function BusinessSystemsPage() {
           <SectionHeading eyebrow="Working principles" title="Evidence first. Human control preserved." />
           <Reveal className="space-y-4 text-ink-soft">
             <p>We review the current workflow before recommending change, recover value from existing systems where practical, and keep accountable people in control of consequential decisions.</p>
-            <p>Recommendations and pricing are scoped to the evidence available. We do not guarantee revenue, conversion, or operational results, and the free audit does not include implementation.</p>
+            <p>Recommendations and pricing are scoped to the evidence available. We do not guarantee revenue, conversion, or operational results, and the audit does not include implementation.</p>
             <div className="flex flex-wrap gap-4 pt-3">
-              <Button href="/free-audit" className="group" data-analytics-event="free_audit_cta">Free Time &amp; Workflow Recovery Audit <Arrow /></Button>
+              <Button href="/audit" className="group" data-analytics-event="audit_cta">Automation Opportunity Audit <Arrow /></Button>
               <Link href="/research" className="self-center text-sm font-medium text-ink-soft hover:text-ink">Explore the broader research vision →</Link>
             </div>
           </Reveal>

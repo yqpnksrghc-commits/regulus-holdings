@@ -107,14 +107,45 @@ npx tsx scripts/receptionist-admin.ts unread
 npx tsx scripts/receptionist-admin.ts follow-ups
 ```
 
+## Pricing change — CAD $0 → CAD $500 prepaid (2026-08-02)
+
+Authorized by the owner. The free audit is retired everywhere; the offer is the
+**Automation Opportunity Audit, CAD $500, prepaid**.
+
+**No payment infrastructure was added.** The site takes no payment. The audit
+request captures a qualified lead and states that a Regulus team member will
+confirm scope and send a **secure payment link**. Nothing in the product claims a
+payment was collected — `tests/pricing-consistency.test.ts` asserts this.
+
+Canonical sources updated together so production cannot contradict itself:
+
+| Surface | Change |
+| --- | --- |
+| `src/lib/commercial-services.ts` | service name + description; `engagementModel[0]` → "CAD $500, prepaid" |
+| `src/lib/receptionist/knowledge.ts` | `APPROVED_PRICING.audit`, new `.payment`, `.note`, `APPROVED_DISCOVERY`, system prompt |
+| `src/lib/receptionist/retrieval.ts` | `pricing.free_audit` → `pricing.audit` + `pricing.payment`; sources repointed |
+| `src/lib/receptionist/response.ts` | pricing composition includes the payment boundary |
+| `src/lib/receptionist/domain-knowledge.ts` | opportunity reflection offers free conversation **or** paid audit |
+| `src/app/audit/page.tsx` | **new** public page (replaces `/free-audit`) |
+| `src/lib/seo.ts` | `serviceJsonLd` publishes `offers.price` so structured data matches the page |
+| `next.config.mjs` | `/free-audit` → `/audit` permanent (308); value-leakage redirect repointed |
+| `src/app/sitemap.ts`, `src/lib/site.ts` | route + nav label |
+| CTAs | Header ×2, Hero, business-systems ×2, home-services ×2, automation, automation/[slug], industries ×2, ArticleShell, ContactForm |
+| Analytics | `free_audit_cta` → `audit_cta` (and `tests/leads.test.ts`) |
+
+**URL change rationale:** a `/free-audit` URL selling a $500 audit is itself a
+contradiction, so the page moved to `/audit` with a permanent 308 redirect —
+inbound links, indexed pages, and printed references still resolve.
+
+**Guard:** `tests/pricing-consistency.test.ts` scans all of `src/` and fails the
+build if `CAD $0`, `/free-audit`, `free audit`, or the old service name reappears
+anywhere. It also asserts the three commitments stay distinct (free exploratory
+conversation / CAD $500 prepaid audit / separately priced implementation).
+
 ## Known limitations
 
-1. **Pricing conflict, unresolved.** The change request specified offering a
-   "CAD $500 prepaid Automation Opportunity Audit". The approved knowledge
-   (`knowledge.ts`, sourced from `/free-audit`) states the audit is **CAD $0**,
-   with optional implementation CAD $2,500–5,000 and management CAD $750–1,500/mo.
-   The approved figure is used. Introducing a $500 price would contradict the
-   published site and is a business decision, not an implementation detail.
+1. ~~Pricing conflict, unresolved.~~ **Resolved 2026-08-02** — see "Pricing change"
+   below. The audit is now CAD $500, prepaid, across every canonical source.
 2. **Local end-to-end is not possible.** Netlify Blobs is unavailable outside the
    Netlify runtime, so `/api/receptionist` returns 503 locally. The responsive
    audit stubs the endpoint with the engine's real strings; conversation

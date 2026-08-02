@@ -22,7 +22,7 @@ export default function ClinicPage() {
         <h2 className="text-h2">How potential automation is approached</h2>
         <p className="mt-4 text-ink-soft">We observe the existing workflow, establish what can be measured, identify unknowns, and define a bounded first improvement. No outcome is promised before discovery and a baseline.</p>
         <p className="mt-5 text-ink-soft">Systems are designed around the clinic&apos;s existing workflow, consent requirements, privacy obligations, and human decision authority. Regulus does not provide legal or regulatory assurances.</p>
-        <Button href="/free-audit" variant="secondary" className="mt-7" data-analytics-event="free_audit_cta">Review the Free Time &amp; Workflow Recovery Audit</Button>
+        <Button href="/audit" variant="secondary" className="mt-7" data-analytics-event="audit_cta">Review the Automation Opportunity Audit</Button>
         <Button href="/contact?intent=clinic-automation" className="mt-3" data-analytics-event="audit_inquiry">Discuss a clinic workflow</Button>
       </div>
     </div></Section>
